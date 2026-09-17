@@ -303,7 +303,7 @@
   .psTop .stat b{color:var(--amber)}
   .psTop .lives{color:var(--red);letter-spacing:.2em}
   .psField{position:relative;border:1px solid var(--term-dim);border-radius:10px;
-    background:rgba(4,7,10,.65);box-shadow:var(--glow);height:min(60vh,440px);overflow:hidden}
+    background:rgba(4,7,10,.65);box-shadow:var(--glow);height:min(72vh,560px);overflow:hidden}
   .psField::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.2;
     background-image:linear-gradient(90deg,rgba(10,255,160,.08) 1px,transparent 1px);background-size:40px 40px}
   /* two lane zones bottom */
@@ -1033,7 +1033,7 @@ function startPacketSort(lv){
     field.appendChild(el);
     const w=field.clientWidth, pw=190;
     const x=Math.random()*Math.max(10,(w-pw-10))+5;
-    const p={ el, x, y:-40, vy:1.1+Math.random()*1.1, type:isBad?'bad':'good', done:false };
+    const p={ el, x, y:-40, vy:0.45+Math.random()*0.4, type:isBad?'bad':'good', done:false };
     el.style.left=x+'px';
     el.addEventListener('click', ()=>onClick(p));
     packets.push(p);
@@ -1099,7 +1099,7 @@ function startPacketSort(lv){
 
   updateLives();
   show('game');
-  psSpawnTimer=setInterval(spawn, 850);
+  psSpawnTimer=setInterval(spawn, 1150);
   spawn();
   psRAF=requestAnimationFrame(step);
 }

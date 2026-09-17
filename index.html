@@ -27,8 +27,8 @@
     overflow:hidden;position:relative;
   }
   /* Matrix code-rain canvas — sits behind all screens */
-  #matrix{position:fixed;inset:0;z-index:0;opacity:.28;pointer-events:none}
-  .screen{background:transparent;z-index:1}
+  #matrix{position:fixed;inset:0;z-index:0;opacity:.13;pointer-events:none}
+  .screen{background:transparent;z-index:2}
 
   /* Sound toggle button */
   #soundToggle{position:fixed;top:16px;right:18px;z-index:120;width:40px;height:40px;
@@ -237,7 +237,7 @@
   .game-tip{color:var(--term-dim);font-size:11px;letter-spacing:.08em}
 
   /* Terminal Hack */
-  .hackwin{border:1px solid var(--term-dim);border-radius:10px;background:rgba(4,7,10,.6);
+  .hackwin{border:1px solid var(--term-dim);border-radius:10px;background:rgba(6,10,14,.9);
     box-shadow:var(--glow);overflow:hidden}
   .hackwin .titlebar{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--term-dim);background:rgba(10,255,160,.05)}
   .dotr{width:11px;height:11px;border-radius:50%}
@@ -433,7 +433,7 @@
   #section{padding:0;overflow-y:auto;display:none}
   #section.active{display:block}
   .sec-inner{min-height:100%;max-width:820px;margin:0 auto;padding:26px 22px 60px;display:flex;flex-direction:column;gap:20px}
-  .sec-card{border:1px solid var(--term-dim);border-radius:12px;padding:30px;background:rgba(10,255,160,.03);box-shadow:var(--glow)}
+  .sec-card{border:1px solid var(--term-dim);border-radius:12px;padding:30px;background:rgba(6,10,14,.88);box-shadow:var(--glow)}
   .sec-hero{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
   .sec-hero img{width:110px;height:110px;border-radius:50%;object-fit:cover;border:2px solid var(--term);box-shadow:var(--glow)}
   .sec-hero h2{font-family:'Orbitron',sans-serif;font-size:24px;letter-spacing:.04em;color:#eafff6;text-shadow:var(--glow)}

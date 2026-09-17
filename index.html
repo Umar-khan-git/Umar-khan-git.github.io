@@ -86,6 +86,37 @@
     font-size:12px;letter-spacing:.15em;cursor:pointer;z-index:10;background:none;border:none;font-family:inherit}
   #skip:hover{color:var(--term)}
 
+  /* ---------- CENTERED TRANSPARENT LOADING BAR OVERLAY ---------- */
+  #centerload{
+    position:absolute;inset:0;z-index:8;display:flex;
+    flex-direction:column;align-items:center;justify-content:center;
+    gap:16px;pointer-events:none;padding:24px;
+    background:radial-gradient(ellipse at center,rgba(4,7,10,.35),rgba(4,7,10,.15));
+  }
+  #centerload.hide{display:none}
+  #centerload .cl-label{
+    font-family:'Orbitron',sans-serif;letter-spacing:.28em;text-transform:uppercase;
+    font-size:clamp(12px,1.8vw,15px);color:var(--cyan);
+    text-shadow:0 0 10px rgba(34,211,238,.5);opacity:.9}
+  .cl-bar{
+    width:min(560px,82vw);height:30px;border-radius:6px;
+    border:1px solid rgba(10,255,160,.35);
+    background:rgba(10,255,160,.05);
+    box-shadow:0 0 18px rgba(10,255,160,.15),inset 0 0 12px rgba(0,0,0,.4);
+    padding:4px;position:relative;overflow:hidden;backdrop-filter:blur(2px)}
+  .cl-bar > i{
+    display:block;height:100%;width:0;border-radius:3px;
+    background:linear-gradient(90deg,rgba(10,255,160,.55),rgba(34,211,238,.75));
+    box-shadow:0 0 16px rgba(10,255,160,.6);transition:width .12s linear}
+  /* moving shine sweep */
+  .cl-bar > i::after{
+    content:"";position:absolute;top:0;left:0;height:100%;width:60px;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);
+    animation:sweep 1.4s linear infinite}
+  @keyframes sweep{0%{transform:translateX(-60px)}100%{transform:translateX(min(560px,82vw))}}
+  #centerpct{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--fg);
+    letter-spacing:.15em;opacity:.85;text-shadow:var(--glow)}
+
   #home{align-items:center;justify-content:center;text-align:center;gap:22px;padding:30px}
   #home .h-card{border:1px solid var(--term-dim);border-radius:6px;padding:34px 40px;max-width:560px;box-shadow:var(--glow);background:rgba(10,255,160,.03)}
   #home img{width:96px;height:96px;border-radius:50%;object-fit:cover;border:2px solid var(--term);box-shadow:var(--glow);margin-bottom:16px}
@@ -99,6 +130,14 @@
 
 <section id="boot" class="screen active">
   <div id="console"></div>
+
+  <!-- Centered transparent loading bar (fills over the whole boot) -->
+  <div id="centerload">
+    <div class="cl-label" id="clLabel">Initializing System</div>
+    <div class="cl-bar"><i id="clFill"></i></div>
+    <div id="centerpct">0%</div>
+  </div>
+
   <div id="progwrap">
     <div class="bar"><i id="barfill"></i></div>
     <div id="progtxt">0%</div>
@@ -137,7 +176,18 @@ const progwrap  = document.getElementById('progwrap');
 const barfill   = document.getElementById('barfill');
 const progtxt   = document.getElementById('progtxt');
 const enterwrap = document.getElementById('enterwrap');
+const centerload= document.getElementById('centerload');
+const clFill    = document.getElementById('clFill');
+const clLabel   = document.getElementById('clLabel');
+const centerpct = document.getElementById('centerpct');
 let booted = false, skipped = false;
+
+function setCenter(pct,label){
+  pct=Math.max(0,Math.min(100,Math.round(pct)));
+  clFill.style.width=pct+'%';
+  centerpct.textContent=pct+'%';
+  if(label) clLabel.textContent=label;
+}
 
 const t = (s)=>new Promise(r=>setTimeout(r, skipped?0:s));
 
@@ -171,10 +221,16 @@ async function typeLine(html){
 }
 
 async function runBoot(){
+  const total = lines.length;
+  let idx = 0;
+  const phaseLabels = ['Initializing System','Loading Modules','Neural Interface','Securing Channel','Compiling Engine'];
   for(const [html,cls,delay] of lines){
     if(booted) return;
     const wrapped = cls ? `<span class="${cls}">${html}</span>` : html;
     await typeLine(wrapped);
+    idx++;
+    // center bar climbs 0 -> 78% across the log phase
+    setCenter((idx/total)*78, phaseLabels[Math.min(phaseLabels.length-1, Math.floor((idx/total)*phaseLabels.length))]);
     await t(delay);
   }
   progwrap.classList.add('show');
@@ -184,8 +240,11 @@ async function runBoot(){
     barfill.style.width=p+'%';
     const label = steps[Math.min(steps.length-1, Math.floor(p/20))];
     progtxt.textContent = p+'%  ::  '+label;
+    // center bar finishes the last 22%
+    setCenter(78 + (p/100)*22, 'Finalizing');
     await t(24);
   }
+  setCenter(100,'Boot Complete');
   progtxt.innerHTML='100%  ::  <span class="ok">boot complete</span>';
   await t(400);
   finishBoot();
@@ -194,6 +253,8 @@ async function runBoot(){
 function finishBoot(){
   if(booted) return;
   booted=true;
+  setCenter(100,'Boot Complete');
+  centerload.classList.add('hide');
   enterwrap.classList.add('show');
 }
 

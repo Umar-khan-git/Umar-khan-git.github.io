@@ -185,6 +185,83 @@
   .home-foot{text-align:center;color:var(--term-dim);font-size:12px;letter-spacing:.1em;margin-top:8px}
   .home-foot a{color:var(--cyan);text-decoration:none}
   .home-foot a:hover{text-shadow:var(--glow)}
+
+  /* ================= GAME SCREEN (generic shell) ================= */
+  #game{padding:0;overflow-y:auto;display:none}
+  #game.active{display:block}
+  .game-inner{min-height:100%;max-width:900px;margin:0 auto;padding:26px 22px 60px;display:flex;flex-direction:column;gap:20px}
+  .game-bar{display:flex;align-items:center;justify-content:space-between;border:1px solid var(--term-dim);
+    border-radius:10px;padding:12px 18px;background:rgba(10,255,160,.03)}
+  .back-btn{background:none;border:1px solid var(--term-dim);color:var(--term);font-family:'JetBrains Mono',monospace;
+    font-size:12px;letter-spacing:.12em;padding:8px 14px;border-radius:6px;cursor:pointer;transition:.2s}
+  .back-btn:hover{border-color:var(--term);box-shadow:var(--glow)}
+  .game-title{font-family:'Orbitron',sans-serif;font-size:15px;letter-spacing:.1em;color:#eafff6;text-shadow:var(--glow)}
+  .game-tip{color:var(--term-dim);font-size:11px;letter-spacing:.08em}
+
+  /* Terminal Hack */
+  .hackwin{border:1px solid var(--term-dim);border-radius:10px;background:rgba(4,7,10,.6);
+    box-shadow:var(--glow);overflow:hidden}
+  .hackwin .titlebar{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--term-dim);background:rgba(10,255,160,.05)}
+  .dotr{width:11px;height:11px;border-radius:50%}
+  .dotr.r{background:#ff5f56}.dotr.y{background:#ffbd2e}.dotr.g{background:#27c93f}
+  .titlebar span{margin-left:8px;color:var(--term-dim);font-size:12px;letter-spacing:.1em}
+  .hackbody{padding:22px 20px 26px}
+  .hackbody .msg{font-size:13.5px;line-height:1.7;margin-bottom:6px}
+  .hackbody .msg .warn{color:var(--amber)}
+  .hackbody .msg .cyan{color:var(--cyan)}
+  .hackbody .msg .hl{color:#eafff6;text-shadow:var(--glow)}
+
+  .target{margin:20px 0 6px;color:var(--term-dim);font-size:12px;letter-spacing:.14em;text-transform:uppercase}
+  .target b{color:var(--amber)}
+  .slots{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0 4px}
+  .slot{width:56px;height:66px;border:1px solid var(--term-dim);border-radius:8px;
+    display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;
+    font-size:26px;color:var(--term);background:rgba(10,255,160,.04);position:relative;
+    text-shadow:var(--glow);transition:.15s;overflow:hidden}
+  .slot.cycling{cursor:pointer}
+  .slot.cycling:hover{border-color:var(--term);box-shadow:var(--glow)}
+  .slot.locked{border-color:var(--term);border-width:2px;background:rgba(10,255,160,.12);
+    box-shadow:0 0 14px rgba(10,255,160,.5)}
+  .slot.locked::after{content:"▓";position:absolute;bottom:2px;right:4px;font-size:9px;color:var(--term);opacity:.6}
+  .slot .lbl{position:absolute;bottom:3px;left:0;right:0;text-align:center;font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:.1em;color:var(--term-dim)}
+  @media(max-width:520px){.slot{width:44px;height:56px;font-size:20px}}
+
+  .hackctl{margin-top:22px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .lock-btn{font-family:'Orbitron',sans-serif;font-size:14px;letter-spacing:.14em;color:var(--bg);
+    background:var(--term);border:none;padding:13px 30px;border-radius:6px;cursor:pointer;
+    box-shadow:0 0 18px rgba(10,255,160,.5);transition:transform .12s}
+  .lock-btn:hover{transform:scale(1.05)}
+  .lock-btn:active{transform:scale(.97)}
+  .lock-btn:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
+  .hackstat{color:var(--term-dim);font-size:12px;letter-spacing:.1em}
+  .hackstat b{color:var(--term)}
+  .hint-line{color:var(--term-dim);font-size:11.5px;letter-spacing:.06em;margin-top:14px;line-height:1.6}
+  .hint-line b{color:var(--cyan)}
+
+  /* granted flash */
+  .granted{margin-top:20px;text-align:center;display:none}
+  .granted.show{display:block;animation:fadein .5s ease}
+  .granted .big{font-family:'Orbitron',sans-serif;font-size:clamp(22px,5vw,40px);letter-spacing:.14em;color:var(--term);text-shadow:0 0 20px rgba(10,255,160,.9)}
+  .flashwin{position:fixed;inset:0;background:var(--term);z-index:200;opacity:0;pointer-events:none}
+  .flashwin.go{animation:flashg .6s ease}
+  @keyframes flashg{0%{opacity:0}30%{opacity:.85}100%{opacity:0}}
+
+  /* ================= SECTION VIEWER (reward content) ================= */
+  #section{padding:0;overflow-y:auto;display:none}
+  #section.active{display:block}
+  .sec-inner{min-height:100%;max-width:820px;margin:0 auto;padding:26px 22px 60px;display:flex;flex-direction:column;gap:20px}
+  .sec-card{border:1px solid var(--term-dim);border-radius:12px;padding:30px;background:rgba(10,255,160,.03);box-shadow:var(--glow)}
+  .sec-hero{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+  .sec-hero img{width:110px;height:110px;border-radius:50%;object-fit:cover;border:2px solid var(--term);box-shadow:var(--glow)}
+  .sec-hero h2{font-family:'Orbitron',sans-serif;font-size:24px;letter-spacing:.04em;color:#eafff6;text-shadow:var(--glow)}
+  .sec-hero .r{color:var(--cyan);font-size:12px;letter-spacing:.16em;text-transform:uppercase;margin-top:6px}
+  .sec-hero .meta{color:var(--term-dim);font-size:12px;margin-top:8px;line-height:1.7}
+  .sec-body{margin-top:8px;color:var(--fg);font-size:14.5px;line-height:1.9;min-height:40px}
+  .sec-body .cursor2{display:inline-block;width:8px;height:15px;background:var(--term);box-shadow:var(--glow);animation:blink 1s steps(1) infinite;vertical-align:-2px}
+  .sec-facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-top:8px}
+  .sec-fact{border:1px solid var(--term-dim);border-radius:8px;padding:14px 16px;background:rgba(10,255,160,.03)}
+  .sec-fact .k{color:var(--term-dim);font-size:10px;letter-spacing:.14em;text-transform:uppercase}
+  .sec-fact .v{color:var(--term);font-size:14px;margin-top:4px;text-shadow:var(--glow)}
 </style>
 </head>
 <body>
@@ -252,6 +329,32 @@
     </div>
   </div>
 </section>
+
+<!-- ================= GAME SCREEN ================= -->
+<section id="game" class="screen">
+  <div class="game-inner">
+    <div class="game-bar">
+      <button class="back-btn" id="gameBack">‹ ABORT</button>
+      <div class="game-title" id="gameTitle">GAME</div>
+      <div class="game-tip" id="gameTip"></div>
+    </div>
+    <div id="gameArea"></div>
+  </div>
+</section>
+
+<!-- ================= SECTION VIEWER ================= -->
+<section id="section" class="screen">
+  <div class="sec-inner">
+    <div class="game-bar">
+      <button class="back-btn" id="secBack">‹ MENU</button>
+      <div class="game-title" id="secTitle">SECTION</div>
+      <div class="game-tip">✓ UNLOCKED</div>
+    </div>
+    <div id="secArea"></div>
+  </div>
+</section>
+
+<div class="flashwin" id="flashwin"></div>
 
 <script>
 function show(id){
@@ -400,21 +503,248 @@ function renderLevels(){
 }
 
 function openLevel(lv, done){
-  if(done){
-    alert('['+lv.title+'] already cleared ✓\n\nThe section viewer is coming in the next build step.');
-    return;
-  }
-  // Games get built one-by-one. For now, a friendly placeholder.
+  if(done){ openSection(lv.id); return; }
+  routeGame(lv);
+}
+
+/* ---- Game router: each level id -> its game ---- */
+function routeGame(lv){
+  if(lv.id==='profile'){ startTerminalHack(lv); return; }
+  // other games built one-by-one
   alert('🎮 '+lv.game.toUpperCase()+'\n\nGame for "'+lv.title+'" is being built next.\n\nWe build & perfect one game at a time.');
+}
+
+function markCleared(id){
+  const p=loadProgress(); p[id]=true; saveProgress(p);
 }
 
 /* dev helper: unlock/reset from console -> resetProgress() */
 window.resetProgress = ()=>{ localStorage.removeItem(SAVE_KEY); renderLevels(); };
 
+/* ================================================================
+   GAME 01 — TERMINAL HACK (Profile unlock)
+   Player freezes cycling characters to spell the passphrase.
+================================================================ */
+let hackTimer=null;
+function startTerminalHack(lv){
+  clearInterval(hackTimer);
+  const WORD = 'UNLOCK';                 // passphrase to crack
+  const CHARSET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ#@%&$0123456789';
+  const state = WORD.split('').map(()=>({locked:false, ch:''}));
+  let activeIndex = 0;                    // which slot the player is trying to lock
+
+  document.getElementById('gameTitle').textContent='LV01 · TERMINAL HACK';
+  document.getElementById('gameTip').textContent='decrypt the passphrase';
+
+  const area = document.getElementById('gameArea');
+  area.innerHTML = `
+    <div class="hackwin">
+      <div class="titlebar">
+        <div class="dotr r"></div><div class="dotr y"></div><div class="dotr g"></div>
+        <span>root@umar-os: ~/operator/profile.enc</span>
+      </div>
+      <div class="hackbody">
+        <div class="msg"><span class="warn">ACCESS LOCKED</span> — operator file is encrypted.</div>
+        <div class="msg">Brute-forcing passphrase... <span class="cyan">lock each character as it flashes past.</span></div>
+
+        <div class="target">Target passphrase: <b id="tgt"></b></div>
+        <div class="slots" id="slots"></div>
+
+        <div class="hackctl">
+          <button class="lock-btn" id="lockBtn">▣ LOCK</button>
+          <div class="hackstat">cracked: <b id="crk">0</b> / ${WORD.length}</div>
+        </div>
+
+        <div class="hint-line">
+          &gt; The character in each box cycles fast. Hit <b>LOCK</b> (or press <b>SPACE</b>) when the box you're on shows the right letter.<br/>
+          &gt; Miss? No penalty — the wrong letter just keeps cycling. Lock all ${WORD.length} to break in.
+        </div>
+
+        <div class="granted" id="granted">
+          <div class="big">✔ ACCESS GRANTED</div>
+        </div>
+      </div>
+    </div>`;
+
+  // build target reveal (shows underscores, fills as you lock)
+  const tgtEl = document.getElementById('tgt');
+  const slotsEl = document.getElementById('slots');
+  const crkEl = document.getElementById('crk');
+  const lockBtn = document.getElementById('lockBtn');
+
+  function renderTargetHint(){
+    tgtEl.innerHTML = WORD.split('').map((c,i)=> state[i].locked ? c : '_').join(' ');
+  }
+  renderTargetHint();
+
+  // build slots
+  WORD.split('').forEach((c,i)=>{
+    const s=document.createElement('div');
+    s.className='slot cycling';
+    s.id='slot'+i;
+    s.innerHTML='<span class="disp">?</span><span class="lbl">'+(i+1)+'</span>';
+    s.addEventListener('click', ()=>{ activeIndex=i; highlightActive(); });
+    slotsEl.appendChild(s);
+  });
+
+  function highlightActive(){
+    WORD.split('').forEach((c,i)=>{
+      const s=document.getElementById('slot'+i);
+      if(state[i].locked) return;
+      s.style.outline = (i===activeIndex) ? '2px solid var(--cyan)' : 'none';
+    });
+  }
+  highlightActive();
+
+  // advance activeIndex to next unlocked slot
+  function nextActive(){
+    for(let k=0;k<WORD.length;k++){
+      const idx=(activeIndex+k)%WORD.length;
+      if(!state[idx].locked){ activeIndex=idx; highlightActive(); return; }
+    }
+  }
+
+  // cycle characters
+  hackTimer=setInterval(()=>{
+    WORD.split('').forEach((c,i)=>{
+      if(state[i].locked) return;
+      const disp=document.querySelector('#slot'+i+' .disp');
+      // The ACTIVE slot mixes in the correct letter often so it's winnable & feels fair
+      let ch;
+      if(i===activeIndex && Math.random()<0.28){ ch=WORD[i]; }
+      else { ch=CHARSET[Math.floor(Math.random()*CHARSET.length)]; }
+      state[i].ch=ch; disp.textContent=ch;
+    });
+  }, 90);
+
+  function tryLock(){
+    if(state[activeIndex].locked) { nextActive(); return; }
+    const i=activeIndex;
+    if(state[i].ch===WORD[i]){
+      state[i].locked=true;
+      const s=document.getElementById('slot'+i);
+      s.classList.remove('cycling'); s.classList.add('locked');
+      s.style.outline='none';
+      s.querySelector('.disp').textContent=WORD[i];
+      beep(880,0.08);
+      renderTargetHint();
+      const cracked=state.filter(x=>x.locked).length;
+      crkEl.textContent=cracked;
+      if(cracked===WORD.length){ winHack(lv); }
+      else { nextActive(); }
+    } else {
+      // gentle miss feedback
+      beep(160,0.05);
+      const s=document.getElementById('slot'+activeIndex);
+      s.style.borderColor='var(--red)';
+      setTimeout(()=>{ if(!state[activeIndex].locked) s.style.borderColor=''; },140);
+    }
+  }
+
+  lockBtn.addEventListener('click', tryLock);
+  // keyboard handler stored so we can remove it on abort
+  currentGameKey = (e)=>{
+    if(e.code==='Space'){ e.preventDefault(); tryLock(); }
+    else if(e.key==='ArrowRight'){ activeIndex=(activeIndex+1)%WORD.length; nextActive(); }
+    else if(e.key==='ArrowLeft'){ activeIndex=(activeIndex-1+WORD.length)%WORD.length; nextActive(); }
+  };
+  document.addEventListener('keydown', currentGameKey);
+
+  show('game');
+}
+
+function winHack(lv){
+  clearInterval(hackTimer);
+  document.getElementById('lockBtn').disabled=true;
+  document.getElementById('granted').classList.add('show');
+  // screen flash
+  const fw=document.getElementById('flashwin');
+  fw.classList.add('go'); setTimeout(()=>fw.classList.remove('go'),650);
+  beep(660,0.1); setTimeout(()=>beep(990,0.14),120);
+  markCleared(lv.id);
+  // after a beat, reveal the profile section
+  setTimeout(()=>{ cleanupGame(); openSection('profile'); }, 1400);
+}
+
+/* ---- shared game utilities ---- */
+let currentGameKey=null;
+function cleanupGame(){
+  clearInterval(hackTimer);
+  if(currentGameKey){ document.removeEventListener('keydown', currentGameKey); currentGameKey=null; }
+}
+
+// tiny WebAudio blip (no assets needed)
+let audioCtx=null;
+function beep(freq=800, dur=0.07){
+  try{
+    audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+    const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+    o.type='square'; o.frequency.value=freq;
+    g.gain.setValueAtTime(0.06, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime+dur);
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(); o.stop(audioCtx.currentTime+dur);
+  }catch(e){}
+}
+
+/* ================================================================
+   SECTION VIEWER — reward content per level (built as unlocked)
+================================================================ */
+let typeTimer=null;
+function openSection(id){
+  clearTimeout(typeTimer);
+  const area=document.getElementById('secArea');
+  const titleEl=document.getElementById('secTitle');
+
+  if(id==='profile'){
+    titleEl.textContent='LV01 · PROFILE';
+    area.innerHTML=`
+      <div class="sec-card">
+        <div class="sec-hero">
+          <img src="assets/umar.jpg" alt="Umar Khan" />
+          <div>
+            <h2>MOHD. UMAR KHAN</h2>
+            <div class="r">Technologist · Cybersecurity · AI · Full-Stack</div>
+            <div class="meta">📍 Dubai, UAE &nbsp;·&nbsp; 🎂 Born Mar 27, 2005 &nbsp;·&nbsp; 🇮🇳 Indian (UAE Resident)</div>
+          </div>
+        </div>
+        <div class="sec-body" id="bioType"><span class="cursor2"></span></div>
+        <div class="sec-facts">
+          <div class="sec-fact"><div class="k">Focus</div><div class="v">Cybersecurity + AI</div></div>
+          <div class="sec-fact"><div class="k">Currently</div><div class="v">BCA Final Year</div></div>
+          <div class="sec-fact"><div class="k">Building</div><div class="v">AI Agents & LLMs</div></div>
+          <div class="sec-fact"><div class="k">Off-terminal</div><div class="v">⚽ Football · 🎮 Gaming</div></div>
+        </div>
+      </div>`;
+    const bio = "Driven young technologist with hands-on experience across hardware infrastructure, software troubleshooting, web development, automation engineering, and emerging AI. I love turning ideas into working prototypes — from repair shops to enterprise logistics to AI agents. Right now I'm deep in cybersecurity fundamentals, RPA, and training offline LLM models. Outside the terminal: football, gaming, and tinkering with small-scale electronics.";
+    typewriter(document.getElementById('bioType'), bio);
+  } else {
+    // sections built as their games are made
+    titleEl.textContent='SECTION';
+    area.innerHTML=`<div class="sec-card"><div class="sec-body">This section unlocks as we build its game. ✓ cleared.</div></div>`;
+  }
+  show('section');
+}
+
+function typewriter(el, text, i=0){
+  el.innerHTML = text.slice(0,i) + '<span class="cursor2"></span>';
+  if(i<text.length){
+    typeTimer=setTimeout(()=>typewriter(el, text, i+1), 16);
+  } else {
+    el.innerHTML = text;
+  }
+}
+
+/* ---- navigation buttons ---- */
+document.getElementById('gameBack').addEventListener('click', ()=>{ cleanupGame(); show('home'); renderLevels(); });
+document.getElementById('secBack').addEventListener('click', ()=>{ clearTimeout(typeTimer); show('home'); renderLevels(); });
+
 document.getElementById('enterBtn').addEventListener('click', enter);
 document.getElementById('skip').addEventListener('click', ()=>{ skipped=true; finishBoot(); });
 document.addEventListener('keydown', e=>{
   if(e.key==='Enter'){
+    // only the boot screen reacts to Enter
+    if(!document.getElementById('boot').classList.contains('active')) return;
     if(!booted){ skipped=true; finishBoot(); }
     else enter();
   }

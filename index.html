@@ -329,6 +329,28 @@
   .psBtn.block{border-color:var(--red);color:var(--red);background:rgba(255,77,94,.06)}
   .psBtn:active{transform:scale(.96)}
 
+  /* ================= GAME 04 — MEMORY GRID ================= */
+  .mgTop{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:14px}
+  .mgTop .stat{font-family:'Orbitron',sans-serif;letter-spacing:.08em;font-size:13px}
+  .mgTop .stat b{color:var(--amber)}
+  .mgGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;max-width:520px;margin:0 auto}
+  @media(max-width:480px){.mgGrid{gap:8px}}
+  .mgCard{aspect-ratio:3/4;perspective:800px;cursor:pointer}
+  .mgInner{position:relative;width:100%;height:100%;transition:transform .45s;transform-style:preserve-3d}
+  .mgCard.flip .mgInner,.mgCard.matched .mgInner{transform:rotateY(180deg)}
+  .mgFace{position:absolute;inset:0;backface-visibility:hidden;border-radius:10px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+    border:1px solid var(--term-dim);padding:6px;text-align:center}
+  .mgBack{background:rgba(10,255,160,.04);color:var(--term-dim);font-family:'Orbitron',sans-serif;font-size:26px}
+  .mgBack::after{content:"?";text-shadow:var(--glow);color:var(--term)}
+  .mgFront{background:rgba(10,255,160,.08);transform:rotateY(180deg)}
+  .mgFront .ico{font-size:26px;filter:drop-shadow(0 0 6px rgba(10,255,160,.5))}
+  .mgFront .nm{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--fg);letter-spacing:.02em;line-height:1.3;word-break:break-word}
+  .mgCard.matched .mgFront{border-color:var(--term);background:rgba(10,255,160,.16);box-shadow:0 0 14px rgba(10,255,160,.4)}
+  .mgCard.matched .mgFront .nm{color:var(--term);text-shadow:var(--glow)}
+  .mgCard.wrong .mgFront{border-color:var(--red);animation:shake .3s}
+  @keyframes shake{0%,100%{transform:rotateY(180deg) translateX(0)}25%{transform:rotateY(180deg) translateX(-4px)}75%{transform:rotateY(180deg) translateX(4px)}}
+
   /* ================= SECTION VIEWER (reward content) ================= */
   #section{padding:0;overflow-y:auto;display:none}
   #section.active{display:block}
@@ -361,6 +383,17 @@
   .job-pts{margin:10px 0 0;padding-left:16px;display:flex;flex-direction:column;gap:5px}
   .job-pts li{color:var(--fg);font-size:13px;line-height:1.55;opacity:.9}
   .job-pts li::marker{color:var(--term)}
+  /* project vault cards */
+  .projGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px}
+  .projCard{display:block;border:1px solid var(--term-dim);border-radius:12px;padding:20px;
+    background:rgba(10,255,160,.03);text-decoration:none;transition:.22s}
+  .projCard:hover{transform:translateY(-4px);border-color:var(--term);box-shadow:0 12px 30px rgba(0,0,0,.5),var(--glow)}
+  .pc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .pc-ico{font-size:26px;filter:drop-shadow(0 0 6px rgba(10,255,160,.5))}
+  .pc-lang{font-size:11px;color:var(--cyan);border:1px solid var(--term-dim);padding:3px 9px;border-radius:20px;font-family:'JetBrains Mono',monospace}
+  .pc-name{font-family:'Orbitron',sans-serif;font-size:14px;color:#eafff6;text-shadow:var(--glow);letter-spacing:.02em;word-break:break-word}
+  .pc-desc{color:var(--term-dim);font-size:12.5px;line-height:1.6;margin-top:8px;min-height:56px}
+  .pc-link{color:var(--term);font-size:12px;font-weight:600;margin-top:12px;letter-spacing:.04em}
 </style>
 </head>
 <body>
@@ -612,6 +645,7 @@ function routeGame(lv){
   if(lv.id==='profile'){ startTerminalHack(lv); return; }
   if(lv.id==='skills'){ startCircuitConnect(lv); return; }
   if(lv.id==='experience'){ startPacketSort(lv); return; }
+  if(lv.id==='projects'){ startMemoryGrid(lv); return; }
   // other games built one-by-one
   alert('🎮 '+lv.game.toUpperCase()+'\n\nGame for "'+lv.title+'" is being built next.\n\nWe build & perfect one game at a time.');
 }
@@ -1104,6 +1138,108 @@ function startPacketSort(lv){
   psRAF=requestAnimationFrame(step);
 }
 
+/* ================================================================
+   GAME 04 — MEMORY GRID (Projects unlock)
+   Flip cards, match project pairs. Each pair loads a project.
+================================================================ */
+function startMemoryGrid(lv){
+  document.getElementById('gameTitle').textContent='LV04 · MEMORY GRID';
+  document.getElementById('gameTip').textContent='match the pairs to unlock the vault';
+
+  // 6 projects -> 6 pairs = 12 cards (4x3)
+  const ITEMS = [
+    {k:'levelup', ico:'🎮', nm:'LevelUp'},
+    {k:'umaros2', ico:'📱', nm:'UmarOS v2'},
+    {k:'umaros1', ico:'💾', nm:'UmarOS v1'},
+    {k:'tracker', ico:'📊', nm:'App Tracker'},
+    {k:'kotlin',  ico:'🤖', nm:'Kotlin'},
+    {k:'android', ico:'⚡', nm:'Android'},
+  ];
+  // build deck of pairs, shuffle
+  let deck=[];
+  ITEMS.forEach((it,i)=>{ deck.push({...it,uid:i+'a'}); deck.push({...it,uid:i+'b'}); });
+  deck=deck.sort(()=>Math.random()-0.5);
+
+  const total=ITEMS.length;
+  let matched=0, moves=0, first=null, busy=false;
+
+  const area=document.getElementById('gameArea');
+  area.innerHTML=`
+    <div class="hackwin">
+      <div class="titlebar">
+        <div class="dotr r"></div><div class="dotr y"></div><div class="dotr g"></div>
+        <span>root@umar-os: ~/projects/vault.lock</span>
+      </div>
+      <div class="hackbody">
+        <div class="msg"><span class="warn">VAULT LOCKED</span> — memory cells scrambled.</div>
+        <div class="msg"><span class="cyan">Flip two cards. Match the pair to load that module.</span></div>
+        <div class="mgTop">
+          <div class="stat">unlocked: <b id="mgMatched">0</b> / ${total}</div>
+          <div class="stat">moves: <b id="mgMoves">0</b></div>
+        </div>
+        <div class="mgGrid" id="mgGrid"></div>
+        <div class="granted" id="granted"><div class="big">🔓 VAULT UNLOCKED</div></div>
+      </div>
+    </div>`;
+
+  const grid=document.getElementById('mgGrid');
+  const mEl=document.getElementById('mgMatched');
+  const mvEl=document.getElementById('mgMoves');
+
+  deck.forEach(card=>{
+    const c=document.createElement('div');
+    c.className='mgCard'; c.dataset.k=card.k; c.dataset.uid=card.uid;
+    c.innerHTML=`
+      <div class="mgInner">
+        <div class="mgFace mgBack"></div>
+        <div class="mgFace mgFront"><span class="ico">${card.ico}</span><span class="nm">${card.nm}</span></div>
+      </div>`;
+    c.addEventListener('click', ()=>flip(c));
+    grid.appendChild(c);
+  });
+
+  function flip(c){
+    if(busy) return;
+    if(c.classList.contains('flip')||c.classList.contains('matched')) return;
+    c.classList.add('flip');
+    beep(560,0.04);
+    if(!first){ first=c; return; }
+    // second card
+    moves++; mvEl.textContent=moves;
+    busy=true;
+    if(first.dataset.k===c.dataset.k){
+      // match
+      setTimeout(()=>{
+        first.classList.add('matched'); c.classList.add('matched');
+        first=null; busy=false;
+        matched++; mEl.textContent=matched;
+        beep(880,0.08);
+        if(matched===total) win();
+      }, 380);
+    } else {
+      // no match: shake + flip back
+      first.classList.add('wrong'); c.classList.add('wrong');
+      beep(180,0.06);
+      const a=first;
+      setTimeout(()=>{
+        a.classList.remove('flip','wrong'); c.classList.remove('flip','wrong');
+        first=null; busy=false;
+      }, 720);
+    }
+  }
+
+  function win(){
+    document.getElementById('granted').classList.add('show');
+    const fw=document.getElementById('flashwin'); fw.style.background='';
+    fw.classList.add('go'); setTimeout(()=>fw.classList.remove('go'),650);
+    beep(660,0.1); setTimeout(()=>beep(990,0.14),120);
+    markCleared(lv.id);
+    setTimeout(()=>{ cleanupGame(); openSection('projects'); }, 1400);
+  }
+
+  show('game');
+}
+
 let typeTimer=null;
 function openSection(id){
   clearTimeout(typeTimer);
@@ -1206,6 +1342,38 @@ function openSection(id){
         <ul class="job-pts">${j.pts.map(p=>`<li>${p}</li>`).join('')}</ul>`;
       tl.appendChild(block);
       setTimeout(()=>{ block.style.opacity='1'; block.style.transform='none'; }, 130*ji+80);
+    });
+  } else if(id==='projects'){
+    titleEl.textContent='LV04 · PROJECTS';
+    const repos = [
+      {ico:'🎮', name:'LevelUp1OVERhaul', lang:'Kotlin', desc:'A gamified self-improvement app — leveling up real life through goals & progression systems.', url:'https://github.com/Umar-khan-git/LevelUp1OVERhaul'},
+      {ico:'📱', name:'UmarOS-Ver-2.O', lang:'Kotlin', desc:'2nd-gen custom Android OS-style experience — a personal launcher/system built from the ground up.', url:'https://github.com/Umar-khan-git/UmarOS-Ver-2.O'},
+      {ico:'💾', name:'UmarOS-V.1', lang:'Kotlin', desc:'The original UmarOS — first take on a custom, personalized Android system interface.', url:'https://github.com/Umar-khan-git/UmarOS-V.1'},
+      {ico:'📊', name:'Personal-App-Tracker', lang:'Kotlin', desc:'A personal app for tracking habits & life — building consistency and monitoring daily progress.', url:'https://github.com/Umar-khan-git/Personal-App-Tracker'},
+    ];
+    area.innerHTML=`
+      <div class="sec-card">
+        <div class="sec-hero" style="margin-bottom:14px">
+          <div>
+            <h2>🚀 PROJECT VAULT</h2>
+            <div class="r">Builds & Repos — vault unlocked</div>
+            <div class="meta">Android / Kotlin builds · <a href="https://github.com/Umar-khan-git" target="_blank" rel="noopener" style="color:var(--cyan)">github.com/Umar-khan-git</a></div>
+          </div>
+        </div>
+        <div class="projGrid" id="projGrid"></div>
+      </div>`;
+    const pg=document.getElementById('projGrid');
+    repos.forEach((r,ri)=>{
+      const card=document.createElement('a');
+      card.className='projCard'; card.href=r.url; card.target='_blank'; card.rel='noopener';
+      card.style.cssText='opacity:0;transform:translateY(8px);transition:.4s';
+      card.innerHTML=`
+        <div class="pc-top"><span class="pc-ico">${r.ico}</span><span class="pc-lang">${r.lang}</span></div>
+        <div class="pc-name">${r.name}</div>
+        <div class="pc-desc">${r.desc}</div>
+        <div class="pc-link">View Repo ↗</div>`;
+      pg.appendChild(card);
+      setTimeout(()=>{ card.style.opacity='1'; card.style.transform='none'; }, 110*ri+80);
     });
   } else {
     // sections built as their games are made

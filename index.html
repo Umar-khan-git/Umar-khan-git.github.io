@@ -297,6 +297,38 @@
     .ccol.right .node{min-width:118px}
   }
 
+  /* ================= GAME 03 — PACKET SORT ================= */
+  .psTop{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:12px}
+  .psTop .stat{font-family:'Orbitron',sans-serif;letter-spacing:.08em;font-size:13px}
+  .psTop .stat b{color:var(--amber)}
+  .psTop .lives{color:var(--red);letter-spacing:.2em}
+  .psField{position:relative;border:1px solid var(--term-dim);border-radius:10px;
+    background:rgba(4,7,10,.65);box-shadow:var(--glow);height:min(60vh,440px);overflow:hidden}
+  .psField::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.2;
+    background-image:linear-gradient(90deg,rgba(10,255,160,.08) 1px,transparent 1px);background-size:40px 40px}
+  /* two lane zones bottom */
+  .psZones{position:absolute;bottom:0;left:0;right:0;height:70px;display:flex;z-index:1}
+  .psZone{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;
+    font-family:'Orbitron',sans-serif;font-size:13px;letter-spacing:.1em;border-top:2px dashed;text-transform:uppercase}
+  .psZone.keep{border-color:var(--term);color:var(--term);background:rgba(10,255,160,.06)}
+  .psZone.block{border-color:var(--red);color:var(--red);background:rgba(255,77,94,.06);border-left:1px solid var(--term-dim)}
+
+  .packet{position:absolute;top:-40px;left:0;padding:8px 12px;border-radius:7px;
+    font-family:'JetBrains Mono',monospace;font-size:12.5px;white-space:nowrap;cursor:pointer;
+    border:1px solid;user-select:none;transition:transform .1s;z-index:2}
+  .packet:hover{transform:scale(1.06)}
+  .packet.good{border-color:var(--term);color:var(--term);background:rgba(10,255,160,.1);box-shadow:0 0 10px rgba(10,255,160,.3)}
+  .packet.bad{border-color:var(--red);color:var(--red);background:rgba(255,77,94,.1);box-shadow:0 0 10px rgba(255,77,94,.3)}
+  .packet .pk-ico{margin-right:6px}
+
+  .psHint{color:var(--term-dim);font-size:11.5px;letter-spacing:.05em;margin-top:14px;line-height:1.7}
+  .psHint b.g{color:var(--term)} .psHint b.r{color:var(--red)}
+  .psBtns{margin-top:12px;display:flex;gap:12px;flex-wrap:wrap}
+  .psBtn{font-family:'Orbitron',sans-serif;font-size:12px;letter-spacing:.1em;padding:10px 18px;border-radius:6px;cursor:pointer;border:1px solid}
+  .psBtn.keep{border-color:var(--term);color:var(--term);background:rgba(10,255,160,.06)}
+  .psBtn.block{border-color:var(--red);color:var(--red);background:rgba(255,77,94,.06)}
+  .psBtn:active{transform:scale(.96)}
+
   /* ================= SECTION VIEWER (reward content) ================= */
   #section{padding:0;overflow-y:auto;display:none}
   #section.active{display:block}
@@ -318,6 +350,17 @@
     font-family:'JetBrains Mono',monospace;font-size:12px;padding:7px 13px;border-radius:7px;letter-spacing:.02em;transition:.2s}
   .chip2:hover{border-color:var(--term);color:var(--term);box-shadow:var(--glow)}
   #skillGroups .skills{display:flex;flex-wrap:wrap;gap:9px}
+  /* career timeline */
+  #careerTL{margin-top:10px;border-left:2px solid var(--term-dim);padding-left:20px;display:flex;flex-direction:column;gap:22px}
+  .job{position:relative}
+  .job::before{content:"";position:absolute;left:-27px;top:5px;width:11px;height:11px;border-radius:50%;
+    background:var(--term);box-shadow:var(--glow);border:2px solid var(--bg)}
+  .job-role{font-family:'Orbitron',sans-serif;color:#eafff6;font-size:14.5px;letter-spacing:.02em;text-shadow:var(--glow)}
+  .job-org{color:var(--cyan);font-size:12.5px;margin-top:3px}
+  .job-date{color:var(--amber);font-size:11.5px;letter-spacing:.06em;margin-top:4px}
+  .job-pts{margin:10px 0 0;padding-left:16px;display:flex;flex-direction:column;gap:5px}
+  .job-pts li{color:var(--fg);font-size:13px;line-height:1.55;opacity:.9}
+  .job-pts li::marker{color:var(--term)}
 </style>
 </head>
 <body>
@@ -512,7 +555,7 @@ function enter(){ show('home'); renderLevels(); }
 const LEVELS = [
   {id:'profile',   icon:'👤', num:'01', title:'PROFILE',    sub:'About the Operator', game:'Terminal Hack',   desc:'Decrypt the operator file to reveal who Umar is.'},
   {id:'skills',    icon:'⚡', num:'02', title:'SKILL TREE',  sub:'Tech Arsenal',       game:'Circuit Connect', desc:'Wire the circuit board — power on every skill node.'},
-  {id:'experience',icon:'💼', num:'03', title:'CAREER',      sub:'Work Experience',    game:'Path Runner',     desc:'Trace the career timeline without breaking the link.'},
+  {id:'experience',icon:'💼', num:'03', title:'CAREER',      sub:'Work Experience',    game:'Packet Sort',     desc:'Sort the data stream — keep the good, block the threats.'},
   {id:'projects',  icon:'🚀', num:'04', title:'PROJECTS',    sub:'Builds & Repos',     game:'Memory Grid',     desc:'Match the pairs to unlock the project vault.'},
   {id:'education', icon:'🎓', num:'05', title:'CREDENTIALS', sub:'Education & Certs',  game:'Quiz Gauntlet',   desc:'Answer correctly to claim degrees & certifications.'},
   {id:'contact',  icon:'📡', num:'06', title:'CONTACT',     sub:'Establish Uplink',   game:'Signal Lock',     desc:'Final boss — lock the signal to reveal contact info.'},
@@ -568,6 +611,7 @@ function openLevel(lv, done){
 function routeGame(lv){
   if(lv.id==='profile'){ startTerminalHack(lv); return; }
   if(lv.id==='skills'){ startCircuitConnect(lv); return; }
+  if(lv.id==='experience'){ startPacketSort(lv); return; }
   // other games built one-by-one
   alert('🎮 '+lv.game.toUpperCase()+'\n\nGame for "'+lv.title+'" is being built next.\n\nWe build & perfect one game at a time.');
 }
@@ -730,6 +774,7 @@ function cleanupGame(){
   clearInterval(hackTimer);
   if(currentGameKey){ document.removeEventListener('keydown', currentGameKey); currentGameKey=null; }
   if(circuitResize){ window.removeEventListener('resize', circuitResize); circuitResize=null; }
+  if(psStop){ psStop(); }
 }
 
 // tiny WebAudio blip (no assets needed)
@@ -908,6 +953,157 @@ function winCircuit(lv){
   markCleared(lv.id);
   setTimeout(()=>{ cleanupGame(); openSection('skills'); }, 1400);
 }
+
+/* ================================================================
+   GAME 03 — PACKET SORT (Career unlock)
+   Data packets fall. CAPTURE the good career-data packets,
+   let the malware threats fall past. Capture the target to win.
+================================================================ */
+let psSpawnTimer=null, psRAF=null, psStop=null;
+function startPacketSort(lv){
+  document.getElementById('gameTitle').textContent='LV03 · PACKET SORT';
+  document.getElementById('gameTip').textContent='capture good data · block threats';
+
+  const GOOD = [
+    {ico:'📄', label:'export-permit.doc'},
+    {ico:'🏢', label:'PetroChem_ME'},
+    {ico:'🏦', label:'ICICI_support'},
+    {ico:'🌐', label:'client-website'},
+    {ico:'🤖', label:'automation-bot'},
+    {ico:'📦', label:'SIRA-permit'},
+    {ico:'🖥️', label:'hardware-fix'},
+    {ico:'📊', label:'logistics-data'},
+    {ico:'🔧', label:'IT-ticket'},
+    {ico:'🧠', label:'LLM-model'},
+  ];
+  const BAD = [
+    {ico:'🐛', label:'trojan.exe'},
+    {ico:'☠️', label:'ransomware'},
+    {ico:'⚠️', label:'phishing.link'},
+    {ico:'🦠', label:'malware.bin'},
+    {ico:'💀', label:'keylogger'},
+  ];
+
+  const TARGET = 8;
+  const MAX_LIVES = 3;
+  let captured=0, lives=MAX_LIVES, over=false;
+
+  const area=document.getElementById('gameArea');
+  area.innerHTML=`
+    <div class="hackwin">
+      <div class="titlebar">
+        <div class="dotr r"></div><div class="dotr y"></div><div class="dotr g"></div>
+        <span>root@umar-os: ~/career/firewall.stream</span>
+      </div>
+      <div class="hackbody">
+        <div class="msg"><span class="warn">INCOMING DATA STREAM</span> — act as the firewall.</div>
+        <div class="psTop">
+          <div class="stat">captured: <b id="psCap">0</b> / ${TARGET}</div>
+          <div class="stat lives" id="psLives">❤ ❤ ❤</div>
+        </div>
+        <div class="psField" id="psField">
+          <div class="psZones">
+            <div class="psZone keep">✔ KEEP (data)</div>
+            <div class="psZone block">✖ BLOCK (threats)</div>
+          </div>
+        </div>
+        <div class="psHint">
+          &gt; <b class="g">CLICK</b> the green career-data packets to capture them. 🟢<br/>
+          &gt; <b class="r">DON'T</b> click the red threats — let them fall past. Clicking a threat costs a life. 🔴<br/>
+          &gt; Capture <b class="g">${TARGET}</b> before you lose <b class="r">${MAX_LIVES}</b> lives.
+        </div>
+        <div class="granted" id="granted"><div class="big">🛡️ STREAM SECURED</div></div>
+      </div>
+    </div>`;
+
+  const field=document.getElementById('psField');
+  const capEl=document.getElementById('psCap');
+  const livesEl=document.getElementById('psLives');
+  const packets=[];
+
+  function updateLives(){ livesEl.textContent = ('❤ '.repeat(lives)).trim() || '—'; }
+
+  function spawn(){
+    if(over) return;
+    const isBad = Math.random() < 0.38;
+    const d = isBad ? BAD[Math.floor(Math.random()*BAD.length)] : GOOD[Math.floor(Math.random()*GOOD.length)];
+    const el=document.createElement('div');
+    el.className='packet '+(isBad?'bad':'good');
+    el.innerHTML=`<span class="pk-ico">${d.ico}</span>${d.label}`;
+    field.appendChild(el);
+    const w=field.clientWidth, pw=190;
+    const x=Math.random()*Math.max(10,(w-pw-10))+5;
+    const p={ el, x, y:-40, vy:1.1+Math.random()*1.1, type:isBad?'bad':'good', done:false };
+    el.style.left=x+'px';
+    el.addEventListener('click', ()=>onClick(p));
+    packets.push(p);
+  }
+
+  function onClick(p){
+    if(over || p.done) return;
+    p.done=true;
+    if(p.type==='good'){
+      captured++; capEl.textContent=captured;
+      p.el.style.transition='transform .25s,opacity .25s';
+      p.el.style.transform='scale(1.4)'; p.el.style.opacity='0';
+      beep(880,0.07);
+      setTimeout(()=>p.el.remove(),250);
+      if(captured>=TARGET) win();
+    } else {
+      lives--; updateLives();
+      p.el.style.transition='transform .2s,opacity .2s';
+      p.el.style.transform='scale(1.3) rotate(8deg)'; p.el.style.opacity='0';
+      beep(140,0.12);
+      const fw=document.getElementById('flashwin'); fw.style.background='var(--red)';
+      fw.classList.add('go'); setTimeout(()=>{fw.classList.remove('go');fw.style.background='';},400);
+      setTimeout(()=>p.el.remove(),200);
+      if(lives<=0) lose();
+    }
+  }
+
+  function step(){
+    if(over) return;
+    const h=field.clientHeight;
+    for(let i=packets.length-1;i>=0;i--){
+      const p=packets[i];
+      if(p.done){ packets.splice(i,1); continue; }
+      p.y+=p.vy; p.el.style.top=p.y+'px';
+      if(p.y > h-30){ p.el.remove(); packets.splice(i,1); }
+    }
+    psRAF=requestAnimationFrame(step);
+  }
+
+  function stopLoops(){ clearInterval(psSpawnTimer); psSpawnTimer=null; cancelAnimationFrame(psRAF); psRAF=null; }
+  psStop=stopLoops;
+
+  function win(){
+    over=true; stopLoops();
+    packets.forEach(p=>p.el.remove());
+    document.getElementById('granted').classList.add('show');
+    const fw=document.getElementById('flashwin'); fw.style.background='';
+    fw.classList.add('go'); setTimeout(()=>fw.classList.remove('go'),650);
+    beep(660,0.1); setTimeout(()=>beep(990,0.14),120);
+    markCleared(lv.id);
+    setTimeout(()=>{ cleanupGame(); openSection('experience'); }, 1400);
+  }
+
+  function lose(){
+    over=true; stopLoops();
+    packets.forEach(p=>p.el.remove());
+    const g=document.getElementById('granted');
+    g.innerHTML='<div class="big" style="color:var(--red);text-shadow:0 0 20px rgba(255,77,94,.8)">⚠ BREACH — RETRY</div>';
+    g.classList.add('show');
+    beep(160,0.15);
+    setTimeout(()=>{ startPacketSort(lv); }, 1500);
+  }
+
+  updateLives();
+  show('game');
+  psSpawnTimer=setInterval(spawn, 850);
+  spawn();
+  psRAF=requestAnimationFrame(step);
+}
+
 let typeTimer=null;
 function openSection(id){
   clearTimeout(typeTimer);
@@ -965,6 +1161,51 @@ function openSection(id){
         <div class="skills">${g.skills.map(s=>`<span class="chip2">${s}</span>`).join('')}</div>`;
       wrap.appendChild(block);
       setTimeout(()=>{ block.style.opacity='1'; block.style.transform='none'; }, 120*gi+80);
+    });
+  } else if(id==='experience'){
+    titleEl.textContent='LV03 · CAREER';
+    const jobs = [
+      {role:'Logistics & Automation (Intern → Employee)', org:'PetroChem Middle East FZE — Jebel Ali, Dubai', date:'Mar 2025 – Present', pts:[
+        'Managed regulatory chemical export: SIRA permits, MOFA submissions, Transfer of Ownership docs',
+        'High-volume export data entry; coordinated team workflows under urgent deadlines',
+        'Built process improvements for document verification & logistics tracking',
+        'Maintained 100% data integrity across internal & customer-facing operations']},
+      {role:'IT Support Engineer', org:'Wipro (ICICI Bank Project) — Mumbai, India', date:'Dec 2024 – Jan 2025', pts:[
+        'On-site technical support across multiple ICICI Bank branches',
+        'Hardware diagnostics, software troubleshooting & end-user support in a banking environment',
+        'Maintained 100% data integrity during sensitive banking operations']},
+      {role:'Web Developer / Automation Specialist (Freelance)', org:'Self-Employed', date:'Sep 2023 – Present', pts:[
+        'Co-founded a web dev agency: full-stack builds, WooCommerce stores, UI/UX design',
+        'Built automation bots: documentation bots, browser extensions, workflow automation',
+        'Trained & deployed offline LLM models (2B params) for proprietary apps',
+        'Delivered client solutions across multiple concurrent projects']},
+      {role:'IT Technical Support', org:'Bank Partner Organization', date:'2023 – 2024', pts:[
+        'On-site support at bank branches; adapted to rotating schedules & locations',
+        'Hardware/software troubleshooting; end-user training & support']},
+    ];
+    area.innerHTML=`
+      <div class="sec-card">
+        <div class="sec-hero" style="margin-bottom:8px">
+          <div>
+            <h2>💼 CAREER LOG</h2>
+            <div class="r">Work Experience — stream secured</div>
+            <div class="meta">From repair shops → banking IT → enterprise logistics → AI automation</div>
+          </div>
+        </div>
+        <div id="careerTL"></div>
+      </div>`;
+    const tl=document.getElementById('careerTL');
+    jobs.forEach((j,ji)=>{
+      const block=document.createElement('div');
+      block.className='job';
+      block.style.cssText='opacity:0;transform:translateX(-8px);transition:.4s';
+      block.innerHTML=`
+        <div class="job-role">${j.role}</div>
+        <div class="job-org">${j.org}</div>
+        <div class="job-date">🕒 ${j.date}</div>
+        <ul class="job-pts">${j.pts.map(p=>`<li>${p}</li>`).join('')}</ul>`;
+      tl.appendChild(block);
+      setTimeout(()=>{ block.style.opacity='1'; block.style.transform='none'; }, 130*ji+80);
     });
   } else {
     // sections built as their games are made

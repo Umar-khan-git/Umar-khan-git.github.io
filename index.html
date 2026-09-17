@@ -250,6 +250,51 @@
   .flashwin.go{animation:flashg .6s ease}
   @keyframes flashg{0%{opacity:0}30%{opacity:.85}100%{opacity:0}}
 
+  /* ================= GAME 02 — CIRCUIT CONNECT ================= */
+  .circuit{position:relative;border:1px solid var(--term-dim);border-radius:10px;
+    background:rgba(4,7,10,.6);box-shadow:var(--glow);padding:26px 18px;overflow:hidden}
+  /* faint PCB grid */
+  .circuit::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.25;
+    background-image:linear-gradient(rgba(10,255,160,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(10,255,160,.08) 1px,transparent 1px);
+    background-size:26px 26px}
+  #wires{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
+  .cboard{position:relative;z-index:2;display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center}
+  .ccol{display:flex;flex-direction:column;gap:16px}
+  .ccol.right{align-items:flex-end}
+  .cmid{color:var(--term-dim);font-size:10px;letter-spacing:.2em;text-align:center;writing-mode:vertical-rl;opacity:.5}
+
+  .node{position:relative;display:flex;align-items:center;gap:10px;
+    border:1px solid var(--term-dim);border-radius:8px;padding:12px 14px;
+    background:rgba(10,255,160,.04);min-width:130px;transition:.2s;cursor:pointer}
+  .node:hover{border-color:var(--term)}
+  .node .nico{font-size:16px}
+  .node .nname{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--fg);letter-spacing:.03em}
+  .ccol.right .node{flex-direction:row-reverse;min-width:150px}
+  .node.cat{background:rgba(34,211,238,.05);border-color:rgba(34,211,238,.35)}
+  .node.cat .nname{color:var(--cyan)}
+
+  /* connection pad */
+  .pad{width:15px;height:15px;border-radius:50%;border:2px solid var(--term-dim);
+    background:var(--bg);position:absolute;top:50%;transform:translateY(-50%);transition:.15s}
+  .node .pad{right:-8px}                /* skill pads on the right edge */
+  .ccol.right .node .pad{left:-8px;right:auto}   /* category pads on the left edge */
+  .pad:hover{border-color:var(--term);box-shadow:var(--glow)}
+  .pad.armed{border-color:var(--cyan);background:var(--cyan);box-shadow:0 0 12px rgba(34,211,238,.8);animation:padpulse 1s infinite}
+  @keyframes padpulse{50%{box-shadow:0 0 4px rgba(34,211,238,.4)}}
+  .pad.done{border-color:var(--term);background:var(--term);box-shadow:var(--glow)}
+
+  .node.powered{border-color:var(--term);border-width:1px;background:rgba(10,255,160,.14);box-shadow:0 0 12px rgba(10,255,160,.35)}
+  .node.powered .nname{color:var(--term);text-shadow:var(--glow)}
+
+  .cstat{margin-top:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+  .cstat .info{color:var(--term-dim);font-size:12px;letter-spacing:.08em}
+  .cstat .info b{color:var(--term)}
+  .cstat .wired{font-family:'Orbitron',sans-serif;color:var(--amber);letter-spacing:.1em;font-size:13px}
+  @media(max-width:560px){
+    .node .nname{font-size:11px}.node{min-width:104px;padding:10px}
+    .ccol.right .node{min-width:118px}
+  }
+
   /* ================= SECTION VIEWER (reward content) ================= */
   #section{padding:0;overflow-y:auto;display:none}
   #section.active{display:block}
@@ -266,6 +311,11 @@
   .sec-fact{border:1px solid var(--term-dim);border-radius:8px;padding:14px 16px;background:rgba(10,255,160,.03)}
   .sec-fact .k{color:var(--term-dim);font-size:10px;letter-spacing:.14em;text-transform:uppercase}
   .sec-fact .v{color:var(--term);font-size:14px;margin-top:4px;text-shadow:var(--glow)}
+  .sec-body .skills{display:flex;flex-wrap:wrap;gap:9px}
+  .chip2{background:rgba(10,255,160,.06);border:1px solid var(--term-dim);color:var(--fg);
+    font-family:'JetBrains Mono',monospace;font-size:12px;padding:7px 13px;border-radius:7px;letter-spacing:.02em;transition:.2s}
+  .chip2:hover{border-color:var(--term);color:var(--term);box-shadow:var(--glow)}
+  #skillGroups .skills{display:flex;flex-wrap:wrap;gap:9px}
 </style>
 </head>
 <body>
@@ -459,7 +509,7 @@ function enter(){ show('home'); renderLevels(); }
 /* ================= HOME / LEVEL MENU ================= */
 const LEVELS = [
   {id:'profile',   icon:'👤', num:'01', title:'PROFILE',    sub:'About the Operator', game:'Terminal Hack',   desc:'Decrypt the operator file to reveal who Umar is.'},
-  {id:'skills',    icon:'⚡', num:'02', title:'SKILL TREE',  sub:'Tech Arsenal',       game:'Icon Catch',      desc:'Catch the falling tech stack to load the skill tree.'},
+  {id:'skills',    icon:'⚡', num:'02', title:'SKILL TREE',  sub:'Tech Arsenal',       game:'Circuit Connect', desc:'Wire the circuit board — power on every skill node.'},
   {id:'experience',icon:'💼', num:'03', title:'CAREER',      sub:'Work Experience',    game:'Path Runner',     desc:'Trace the career timeline without breaking the link.'},
   {id:'projects',  icon:'🚀', num:'04', title:'PROJECTS',    sub:'Builds & Repos',     game:'Memory Grid',     desc:'Match the pairs to unlock the project vault.'},
   {id:'education', icon:'🎓', num:'05', title:'CREDENTIALS', sub:'Education & Certs',  game:'Quiz Gauntlet',   desc:'Answer correctly to claim degrees & certifications.'},
@@ -515,6 +565,7 @@ function openLevel(lv, done){
 /* ---- Game router: each level id -> its game ---- */
 function routeGame(lv){
   if(lv.id==='profile'){ startTerminalHack(lv); return; }
+  if(lv.id==='skills'){ startCircuitConnect(lv); return; }
   // other games built one-by-one
   alert('🎮 '+lv.game.toUpperCase()+'\n\nGame for "'+lv.title+'" is being built next.\n\nWe build & perfect one game at a time.');
 }
@@ -676,6 +727,7 @@ let currentGameKey=null;
 function cleanupGame(){
   clearInterval(hackTimer);
   if(currentGameKey){ document.removeEventListener('keydown', currentGameKey); currentGameKey=null; }
+  if(circuitResize){ window.removeEventListener('resize', circuitResize); circuitResize=null; }
 }
 
 // tiny WebAudio blip (no assets needed)
@@ -693,8 +745,165 @@ function beep(freq=800, dur=0.07){
 }
 
 /* ================================================================
-   SECTION VIEWER — reward content per level (built as unlocked)
+   GAME 02 — CIRCUIT CONNECT (Skill Tree unlock)
+   Wire each skill node to its correct category bus to power it on.
 ================================================================ */
+let circuitResize=null;
+function startCircuitConnect(lv){
+  document.getElementById('gameTitle').textContent='LV02 · CIRCUIT CONNECT';
+  document.getElementById('gameTip').textContent='wire every skill to its bus';
+
+  // skills (left) each map to one category id (right)
+  const SKILLS = [
+    {id:'s_linux',  ico:'🐧', name:'Linux',      cat:'c_sec'},
+    {id:'s_net',    ico:'🛡️', name:'Networking', cat:'c_sec'},
+    {id:'s_claude', ico:'🤖', name:'Claude API', cat:'c_ai'},
+    {id:'s_py',     ico:'🐍', name:'Python',     cat:'c_ai'},
+    {id:'s_react',  ico:'⚛️', name:'React',      cat:'c_web'},
+    {id:'s_sql',    ico:'🗄️', name:'SQL',        cat:'c_web'},
+  ];
+  const CATS = [
+    {id:'c_sec', ico:'🔒', name:'SECURITY'},
+    {id:'c_ai',  ico:'⚙️', name:'AI / AUTOMATION'},
+    {id:'c_web', ico:'🌐', name:'WEB / DATA'},
+  ];
+  // shuffle skill order so it isn't lined up with categories
+  const skillsShuffled = SKILLS.slice().sort(()=>Math.random()-0.5);
+
+  const area=document.getElementById('gameArea');
+  area.innerHTML=`
+    <div class="hackwin">
+      <div class="titlebar">
+        <div class="dotr r"></div><div class="dotr y"></div><div class="dotr g"></div>
+        <span>root@umar-os: ~/skills/board.pcb</span>
+      </div>
+      <div class="hackbody">
+        <div class="msg"><span class="warn">BOARD OFFLINE</span> — skill nodes unpowered.</div>
+        <div class="msg"><span class="cyan">Click a skill pad, then click the category bus it belongs to.</span> Correct wiring powers the node.</div>
+
+        <div class="circuit" style="margin-top:18px">
+          <svg id="wires"></svg>
+          <div class="cboard">
+            <div class="ccol left" id="skillCol"></div>
+            <div class="cmid">■ BUS ■</div>
+            <div class="ccol right" id="catCol"></div>
+          </div>
+        </div>
+
+        <div class="cstat">
+          <div class="info">Tip: not sure? Guess — a wrong wire just sparks red, no penalty.</div>
+          <div class="wired">wired: <span id="wiredN">0</span> / ${SKILLS.length}</div>
+        </div>
+
+        <div class="granted" id="granted"><div class="big">⚡ BOARD POWERED</div></div>
+      </div>
+    </div>`;
+
+  const skillCol=document.getElementById('skillCol');
+  const catCol=document.getElementById('catCol');
+  const svg=document.getElementById('wires');
+
+  // build skill nodes
+  skillsShuffled.forEach(s=>{
+    const n=document.createElement('div');
+    n.className='node skill'; n.id=s.id;
+    n.innerHTML=`<span class="nico">${s.ico}</span><span class="nname">${s.name}</span><span class="pad" data-side="skill" data-id="${s.id}"></span>`;
+    skillCol.appendChild(n);
+  });
+  // build category nodes
+  CATS.forEach(c=>{
+    const n=document.createElement('div');
+    n.className='node cat'; n.id=c.id;
+    n.innerHTML=`<span class="nico">${c.ico}</span><span class="nname">${c.name}</span><span class="pad" data-side="cat" data-id="${c.id}"></span>`;
+    catCol.appendChild(n);
+  });
+
+  let armedSkill=null;              // currently selected skill pad id
+  const connections=[];            // {skill, cat}
+  let wired=0;
+
+  function padCenter(el){
+    const r=el.getBoundingClientRect();
+    const b=svg.getBoundingClientRect();
+    return { x:r.left+r.width/2-b.left, y:r.top+r.height/2-b.top };
+  }
+  function drawWire(skillId, catId, color){
+    const sp=document.querySelector('.pad[data-side="skill"][data-id="'+skillId+'"]');
+    const cp=document.querySelector('.pad[data-side="cat"][data-id="'+catId+'"]');
+    if(!sp||!cp) return null;
+    const a=padCenter(sp), b=padCenter(cp);
+    const dx=Math.abs(b.x-a.x)*0.5;
+    const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d',`M ${a.x} ${a.y} C ${a.x+dx} ${a.y}, ${b.x-dx} ${b.y}, ${b.x} ${b.y}`);
+    path.setAttribute('fill','none');
+    path.setAttribute('stroke',color);
+    path.setAttribute('stroke-width','2.5');
+    path.setAttribute('stroke-linecap','round');
+    path.style.filter='drop-shadow(0 0 4px '+color+')';
+    svg.appendChild(path);
+    return path;
+  }
+  function redrawAll(){
+    svg.innerHTML='';
+    connections.forEach(cn=> drawWire(cn.skill, cn.cat, 'var(--term)'));
+  }
+  circuitResize=()=>redrawAll();
+  window.addEventListener('resize', circuitResize);
+
+  function clearArmed(){
+    document.querySelectorAll('.pad.armed').forEach(p=>p.classList.remove('armed'));
+    armedSkill=null;
+  }
+
+  area.querySelectorAll('.pad').forEach(pad=>{
+    pad.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const side=pad.dataset.side, id=pad.dataset.id;
+      if(side==='skill'){
+        // don't re-arm an already-wired skill
+        if(connections.some(c=>c.skill===id)) return;
+        clearArmed();
+        armedSkill=id; pad.classList.add('armed');
+        beep(500,0.05);
+      } else if(side==='cat'){
+        if(!armedSkill) return;
+        const skill=SKILLS.find(s=>s.id===armedSkill);
+        if(skill.cat===id){
+          // correct
+          connections.push({skill:armedSkill, cat:id});
+          drawWire(armedSkill, id, 'var(--term)');
+          document.getElementById(armedSkill).classList.add('powered');
+          document.querySelector('.pad[data-side="skill"][data-id="'+armedSkill+'"]').classList.add('done');
+          wired++; document.getElementById('wiredN').textContent=wired;
+          beep(880,0.08);
+          clearArmed();
+          if(wired===SKILLS.length) winCircuit(lv);
+        } else {
+          // wrong: red spark then fade
+          const p=drawWire(armedSkill, id, 'var(--red)');
+          beep(150,0.06);
+          const node=document.getElementById(id); node.style.borderColor='var(--red)';
+          setTimeout(()=>{ if(p) p.remove(); node.style.borderColor=''; }, 260);
+          clearArmed();
+        }
+      }
+    });
+  });
+
+  show('game');
+  // draw after layout settles
+  setTimeout(redrawAll, 30);
+}
+
+function winCircuit(lv){
+  if(circuitResize){ window.removeEventListener('resize', circuitResize); circuitResize=null; }
+  document.getElementById('granted').classList.add('show');
+  const fw=document.getElementById('flashwin');
+  fw.classList.add('go'); setTimeout(()=>fw.classList.remove('go'),650);
+  beep(660,0.1); setTimeout(()=>beep(990,0.14),120);
+  markCleared(lv.id);
+  setTimeout(()=>{ cleanupGame(); openSection('skills'); }, 1400);
+}
 let typeTimer=null;
 function openSection(id){
   clearTimeout(typeTimer);
@@ -723,6 +932,36 @@ function openSection(id){
       </div>`;
     const bio = "Driven young technologist with hands-on experience across hardware infrastructure, software troubleshooting, web development, automation engineering, and emerging AI. I love turning ideas into working prototypes — from repair shops to enterprise logistics to AI agents. Right now I'm deep in cybersecurity fundamentals, RPA, and training offline LLM models. Outside the terminal: football, gaming, and tinkering with small-scale electronics.";
     typewriter(document.getElementById('bioType'), bio);
+  } else if(id==='skills'){
+    titleEl.textContent='LV02 · SKILL TREE';
+    const groups = [
+      {ico:'🔒', name:'Cybersecurity & Systems', skills:['Linux (Ubuntu)','Server Admin','System Hardening','Networking','Hardware Repair','CompTIA A+/Net+ (in progress)']},
+      {ico:'⚙️', name:'AI & Automation', skills:['Claude API','LLM Fine-tuning','MCP Servers','Offline LLMs (2B)','n8n','Power Automate','Zapier','RPA']},
+      {ico:'🌐', name:'Web & Full-Stack', skills:['JavaScript / Node.js','React','HTML / CSS','WooCommerce','Browser Extensions','DevOps basics']},
+      {ico:'📊', name:'Data & Enterprise', skills:['Python','SQL','Excel (advanced)','BI Dashboards','JD Edwards ERP','Data Analysis']},
+    ];
+    area.innerHTML=`
+      <div class="sec-card">
+        <div class="sec-hero" style="margin-bottom:14px">
+          <div>
+            <h2>⚡ SKILL TREE</h2>
+            <div class="r">Tech Arsenal — all nodes powered</div>
+            <div class="meta">Programming · AI/Automation · Cybersecurity · Web · Data</div>
+          </div>
+        </div>
+        <div id="skillGroups"></div>
+      </div>`;
+    const wrap=document.getElementById('skillGroups');
+    // reveal groups one-by-one with staggered fade
+    groups.forEach((g,gi)=>{
+      const block=document.createElement('div');
+      block.style.cssText='margin-top:18px;opacity:0;transform:translateY(8px);transition:.4s';
+      block.innerHTML=`
+        <div style="font-family:'Orbitron',sans-serif;color:#eafff6;font-size:14px;letter-spacing:.06em;text-shadow:var(--glow);margin-bottom:10px">${g.ico} ${g.name}</div>
+        <div class="skills">${g.skills.map(s=>`<span class="chip2">${s}</span>`).join('')}</div>`;
+      wrap.appendChild(block);
+      setTimeout(()=>{ block.style.opacity='1'; block.style.transform='none'; }, 120*gi+80);
+    });
   } else {
     // sections built as their games are made
     titleEl.textContent='SECTION';

@@ -376,6 +376,25 @@
   .ulProg{margin-top:12px;color:var(--term-dim);font-size:12px;letter-spacing:.1em}
   .ulProg b{color:var(--term)}
 
+  /* ================= GAME 06 — CERT COLLECTOR ================= */
+  .ccTop{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:14px}
+  .ccTop .stat{font-family:'Orbitron',sans-serif;letter-spacing:.08em;font-size:13px}
+  .ccTop .stat b{color:var(--amber)}
+  .ccField{position:relative;border:1px solid var(--term-dim);border-radius:10px;
+    background:rgba(4,7,10,.65);box-shadow:var(--glow);height:min(66vh,500px);overflow:hidden}
+  .ccField::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.16;
+    background-image:radial-gradient(rgba(10,255,160,.25) 1px,transparent 1px);background-size:30px 30px}
+  .cert{position:absolute;bottom:-70px;display:flex;align-items:center;gap:9px;
+    padding:11px 15px;border-radius:9px;font-family:'JetBrains Mono',monospace;font-size:12.5px;
+    white-space:nowrap;cursor:pointer;border:1px solid;user-select:none;transition:transform .1s;z-index:2}
+  .cert:hover{transform:scale(1.06)}
+  .cert.real{border-color:var(--amber);color:var(--amber);background:rgba(255,176,0,.08);box-shadow:0 0 12px rgba(255,176,0,.3)}
+  .cert.fake{border-color:var(--red);color:var(--red);background:rgba(255,77,94,.08);box-shadow:0 0 10px rgba(255,77,94,.25)}
+  .cert .cico{font-size:16px}
+
+  .ccHint{color:var(--term-dim);font-size:11.5px;letter-spacing:.05em;margin-top:14px;line-height:1.7}
+  .ccHint b.a{color:var(--amber)} .ccHint b.r{color:var(--red)}
+
   /* ================= SECTION VIEWER (reward content) ================= */
   #section{padding:0;overflow-y:auto;display:none}
   #section.active{display:block}
@@ -429,6 +448,21 @@
   .ctc-v{color:var(--term);font-family:'JetBrains Mono',monospace;font-size:13px;margin-top:3px;text-shadow:var(--glow);word-break:break-word}
   .ctcDone{margin-top:22px;text-align:center;color:var(--amber);font-family:'Orbitron',sans-serif;
     font-size:13px;letter-spacing:.1em;text-shadow:0 0 10px rgba(255,176,0,.5)}
+  /* credentials */
+  #eduList{display:flex;flex-direction:column;gap:14px}
+  .eduRow{display:flex;gap:14px;align-items:flex-start;border:1px solid var(--term-dim);border-radius:10px;padding:15px 18px;background:rgba(10,255,160,.03)}
+  .edu-ico{font-size:24px;filter:drop-shadow(0 0 6px rgba(10,255,160,.5))}
+  .edu-name{font-family:'Orbitron',sans-serif;color:#eafff6;font-size:13.5px;letter-spacing:.02em;text-shadow:var(--glow)}
+  .edu-org{color:var(--cyan);font-size:12.5px;margin-top:3px}
+  .edu-date{color:var(--amber);font-size:11.5px;letter-spacing:.06em;margin-top:4px}
+  .certGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+  .certCard{border:1px solid var(--term-dim);border-radius:10px;padding:16px 18px;background:rgba(10,255,160,.03);text-align:center;transition:.2s}
+  .certCard:hover{border-color:var(--term);box-shadow:var(--glow)}
+  .cert-ico{font-size:26px;filter:drop-shadow(0 0 6px rgba(10,255,160,.5))}
+  .cert-name{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--fg);margin-top:8px;line-height:1.4;min-height:34px}
+  .cert-st{font-size:11px;letter-spacing:.06em;margin-top:8px;font-family:'Orbitron',sans-serif}
+  .cert-st.done{color:var(--term);text-shadow:var(--glow)}
+  .cert-st.prog{color:var(--amber)}
 </style>
 </head>
 <body>
@@ -625,7 +659,7 @@ const LEVELS = [
   {id:'skills',    icon:'⚡', num:'02', title:'SKILL TREE',  sub:'Tech Arsenal',       game:'Circuit Connect', desc:'Wire the circuit board — power on every skill node.'},
   {id:'experience',icon:'💼', num:'03', title:'CAREER',      sub:'Work Experience',    game:'Packet Sort',     desc:'Sort the data stream — keep the good, block the threats.'},
   {id:'projects',  icon:'🚀', num:'04', title:'PROJECTS',    sub:'Builds & Repos',     game:'Memory Grid',     desc:'Match the pairs to unlock the project vault.'},
-  {id:'education', icon:'🎓', num:'05', title:'CREDENTIALS', sub:'Education & Certs',  game:'Quiz Gauntlet',   desc:'Answer correctly to claim degrees & certifications.'},
+  {id:'education', icon:'🎓', num:'05', title:'CREDENTIALS', sub:'Education & Certs',  game:'Cert Collector',  desc:'Collect your real certs — dodge the fakes.'},
   {id:'contact',  icon:'📡', num:'06', title:'CONTACT',     sub:'Establish Uplink',   game:'Signal Lock',     desc:'Final boss — lock the signal to reveal contact info.'},
 ];
 
@@ -682,6 +716,7 @@ function routeGame(lv){
   if(lv.id==='experience'){ startPacketSort(lv); return; }
   if(lv.id==='projects'){ startMemoryGrid(lv); return; }
   if(lv.id==='contact'){ startTerminalUplink(lv); return; }
+  if(lv.id==='education'){ startCertCollector(lv); return; }
   // other games built one-by-one
   alert('🎮 '+lv.game.toUpperCase()+'\n\nGame for "'+lv.title+'" is being built next.\n\nWe build & perfect one game at a time.');
 }
@@ -845,6 +880,7 @@ function cleanupGame(){
   if(currentGameKey){ document.removeEventListener('keydown', currentGameKey); currentGameKey=null; }
   if(circuitResize){ window.removeEventListener('resize', circuitResize); circuitResize=null; }
   if(psStop){ psStop(); }
+  if(ccStop){ ccStop(); }
   ulKey=null;
 }
 
@@ -1387,6 +1423,144 @@ function startTerminalUplink(lv){
   setTimeout(()=>input.focus(), 60);
 }
 
+/* ================================================================
+   GAME 06 — CERT COLLECTOR (Credentials unlock)
+   Real certs rise up — click to collect. Ignore the fakes.
+   Collect all real certs to win. Fakes = no penalty (victory lap).
+================================================================ */
+let ccSpawnTimer=null, ccRAF=null, ccStop=null;
+function startCertCollector(lv){
+  document.getElementById('gameTitle').textContent='LV05 · CERT COLLECTOR';
+  document.getElementById('gameTip').textContent='collect real certs · ignore fakes';
+
+  // real certs to collect (each must be caught once)
+  const REAL = [
+    {ico:'📊', label:'Google Data Analytics'},
+    {ico:'🐍', label:'Microsoft Python'},
+    {ico:'📋', label:'PMP Foundation'},
+    {ico:'🔧', label:'CompTIA A+'},
+    {ico:'🌐', label:'CompTIA Network+'},
+  ];
+  const FAKE = [
+    {ico:'❌', label:'FakeCert_2005.pdf'},
+    {ico:'⚠️', label:'expired.cert'},
+    {ico:'🚫', label:'unverified.doc'},
+    {ico:'💢', label:'scam-diploma'},
+  ];
+
+  const TARGET = REAL.length;
+  const collectedSet = new Set();
+  let over=false;
+  // queue: ensure every real cert appears; mix with fakes
+  const realQueue = REAL.slice().sort(()=>Math.random()-0.5);
+
+  const area=document.getElementById('gameArea');
+  area.innerHTML=`
+    <div class="hackwin">
+      <div class="titlebar">
+        <div class="dotr r"></div><div class="dotr y"></div><div class="dotr g"></div>
+        <span>root@umar-os: ~/credentials/verify.scan</span>
+      </div>
+      <div class="hackbody">
+        <div class="msg"><span class="warn">VERIFYING CREDENTIALS</span> — collect the authentic certifications.</div>
+        <div class="ccTop">
+          <div class="stat">collected: <b id="ccGot">0</b> / ${TARGET}</div>
+          <div class="stat" id="ccMissTxt" style="color:var(--term-dim)">real certs float in gold ✦</div>
+        </div>
+        <div class="ccField" id="ccField"></div>
+        <div class="ccHint">
+          &gt; Click the <b class="a">GOLD</b> certs (your real ones) to collect them. ✦<br/>
+          &gt; Ignore the <b class="r">RED</b> fakes — no penalty, just let them float past.<br/>
+          &gt; Collect all <b class="a">${TARGET}</b> to claim your credentials.
+        </div>
+        <div class="granted" id="granted"><div class="big">🎓 CREDENTIALS VERIFIED</div></div>
+      </div>
+    </div>`;
+
+  const field=document.getElementById('ccField');
+  const gotEl=document.getElementById('ccGot');
+  const certs=[];
+  let spawnCount=0;
+
+  function spawn(){
+    if(over) return;
+    // every 2nd spawn is guaranteed a not-yet-collected real cert (keeps it winnable)
+    let data, isReal;
+    const needed = REAL.filter(r=>!collectedSet.has(r.label));
+    if(spawnCount % 2 === 0 && needed.length){
+      data = needed[Math.floor(Math.random()*needed.length)]; isReal=true;
+    } else if(Math.random() < 0.5 && needed.length){
+      data = needed[Math.floor(Math.random()*needed.length)]; isReal=true;
+    } else {
+      data = FAKE[Math.floor(Math.random()*FAKE.length)]; isReal=false;
+    }
+    spawnCount++;
+
+    const el=document.createElement('div');
+    el.className='cert '+(isReal?'real':'fake');
+    el.innerHTML=`<span class="cico">${data.ico}</span>${isReal?'✦ ':''}${data.label}`;
+    field.appendChild(el);
+    const w=field.clientWidth, cw=210;
+    const x=Math.random()*Math.max(10,(w-cw-10))+5;
+    const drift=(Math.random()-0.5)*0.4;
+    const p={ el, x, y:field.clientHeight+70, vy:0.5+Math.random()*0.35, drift, type:isReal?'real':'fake', label:data.label, done:false };
+    el.style.left=x+'px';
+    el.addEventListener('click', ()=>onClick(p));
+    certs.push(p);
+  }
+
+  function onClick(p){
+    if(over || p.done) return;
+    if(p.type==='real'){
+      if(collectedSet.has(p.label)){ p.done=true; p.el.remove(); return; }
+      p.done=true; collectedSet.add(p.label);
+      gotEl.textContent=collectedSet.size;
+      p.el.style.transition='transform .25s,opacity .25s';
+      p.el.style.transform='scale(1.4)'; p.el.style.opacity='0';
+      beep(880,0.08);
+      setTimeout(()=>p.el.remove(),250);
+      if(collectedSet.size>=TARGET) win();
+    } else {
+      // fake clicked: gentle shake, no penalty
+      beep(180,0.05);
+      p.el.style.transition='transform .15s';
+      p.el.style.transform='translateX(-4px) rotate(-4deg)';
+      setTimeout(()=>{ if(!p.done) p.el.style.transform=''; },150);
+    }
+  }
+
+  function step(){
+    if(over) return;
+    for(let i=certs.length-1;i>=0;i--){
+      const p=certs[i];
+      if(p.done){ certs.splice(i,1); continue; }
+      p.y-=p.vy; p.x+=p.drift;
+      p.el.style.top=p.y+'px'; p.el.style.left=p.x+'px';
+      if(p.y < -80){ p.el.remove(); certs.splice(i,1); }
+    }
+    ccRAF=requestAnimationFrame(step);
+  }
+
+  function stopLoops(){ clearInterval(ccSpawnTimer); ccSpawnTimer=null; cancelAnimationFrame(ccRAF); ccRAF=null; }
+  ccStop=stopLoops;
+
+  function win(){
+    over=true; stopLoops();
+    certs.forEach(p=>p.el.remove());
+    document.getElementById('granted').classList.add('show');
+    const fw=document.getElementById('flashwin'); fw.style.background='';
+    fw.classList.add('go'); setTimeout(()=>fw.classList.remove('go'),650);
+    beep(660,0.1); setTimeout(()=>beep(990,0.14),120);
+    markCleared(lv.id);
+    setTimeout(()=>{ cleanupGame(); openSection('education'); }, 1400);
+  }
+
+  show('game');
+  ccSpawnTimer=setInterval(spawn, 1050);
+  spawn();
+  ccRAF=requestAnimationFrame(step);
+}
+
 let typeTimer=null;
 function openSection(id){
   clearTimeout(typeTimer);
@@ -1552,6 +1726,50 @@ function openSection(id){
       a.innerHTML=`<span class="ctc-ico">${l.ico}</span><div><div class="ctc-k">${l.k}</div><div class="ctc-v">${l.v}</div></div>`;
       cg.appendChild(a);
       setTimeout(()=>{ a.style.opacity='1'; a.style.transform='none'; }, 110*li+80);
+    });
+  } else if(id==='education'){
+    titleEl.textContent='LV05 · CREDENTIALS';
+    const edu = [
+      {ico:'🎓', name:'B.C.A — Bachelor of Computer Applications', org:'Asian International University (AIU), Dubai', date:'Final Year · Expected Aug 2026'},
+      {ico:'📈', name:'B.Sc. Data Science', org:'N.G. Acharya & D.K. Degree College, Mumbai', date:'First Year · Ongoing'},
+    ];
+    const certs = [
+      {ico:'📊', name:'Google Data Analytics', st:'Certified'},
+      {ico:'🐍', name:'Microsoft Python for Data Analysis', st:'Certified'},
+      {ico:'📋', name:'Project Management (PMP) — Foundation', st:'Certified'},
+      {ico:'🔧', name:'CompTIA A+', st:'In Progress · 2026'},
+      {ico:'🌐', name:'CompTIA Network+', st:'In Progress · 2026'},
+    ];
+    area.innerHTML=`
+      <div class="sec-card">
+        <div class="sec-hero" style="margin-bottom:14px">
+          <div>
+            <h2>🎓 CREDENTIALS</h2>
+            <div class="r">Education & Certifications — verified</div>
+            <div class="meta">Degrees in progress · industry certifications collected</div>
+          </div>
+        </div>
+        <div style="font-family:'Orbitron',sans-serif;color:#eafff6;font-size:14px;letter-spacing:.05em;text-shadow:var(--glow);margin:8px 0 12px">🏛️ Education</div>
+        <div id="eduList"></div>
+        <div style="font-family:'Orbitron',sans-serif;color:#eafff6;font-size:14px;letter-spacing:.05em;text-shadow:var(--glow);margin:22px 0 12px">📜 Certifications</div>
+        <div class="certGrid" id="certList"></div>
+      </div>`;
+    const eduList=document.getElementById('eduList');
+    edu.forEach((e,ei)=>{
+      const d=document.createElement('div');
+      d.className='eduRow'; d.style.cssText='opacity:0;transform:translateX(-8px);transition:.4s';
+      d.innerHTML=`<span class="edu-ico">${e.ico}</span><div><div class="edu-name">${e.name}</div><div class="edu-org">${e.org}</div><div class="edu-date">🕒 ${e.date}</div></div>`;
+      eduList.appendChild(d);
+      setTimeout(()=>{ d.style.opacity='1'; d.style.transform='none'; }, 120*ei+80);
+    });
+    const certList=document.getElementById('certList');
+    certs.forEach((c,ci)=>{
+      const d=document.createElement('div');
+      d.className='certCard'; d.style.cssText='opacity:0;transform:translateY(8px);transition:.4s';
+      const prog = c.st.includes('Progress');
+      d.innerHTML=`<span class="cert-ico">${c.ico}</span><div class="cert-name">${c.name}</div><div class="cert-st ${prog?'prog':'done'}">${prog?'⏳':'✓'} ${c.st}</div>`;
+      certList.appendChild(d);
+      setTimeout(()=>{ d.style.opacity='1'; d.style.transform='none'; }, 90*ci+200);
     });
   } else {
     // sections built as their games are made

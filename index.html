@@ -26,6 +26,40 @@
     font-family:'JetBrains Mono',monospace;
     overflow:hidden;position:relative;
   }
+  /* Matrix code-rain canvas — sits behind all screens */
+  #matrix{position:fixed;inset:0;z-index:0;opacity:.28;pointer-events:none}
+  .screen{background:transparent;z-index:1}
+
+  /* Sound toggle button */
+  #soundToggle{position:fixed;top:16px;right:18px;z-index:120;width:40px;height:40px;
+    border:1px solid var(--term-dim);background:rgba(4,7,10,.7);border-radius:8px;cursor:pointer;
+    font-size:17px;line-height:1;color:var(--term);transition:.2s;backdrop-filter:blur(4px)}
+  #soundToggle:hover{border-color:var(--term);box-shadow:var(--glow)}
+  #soundToggle.muted{opacity:.55}
+
+  /* ===== 100% Victory overlay ===== */
+  #victory{position:fixed;inset:0;z-index:300;display:none;align-items:center;justify-content:center;
+    background:radial-gradient(ellipse at center,rgba(4,7,10,.86),rgba(4,7,10,.97));backdrop-filter:blur(3px)}
+  #victory.show{display:flex;animation:fadein .5s ease}
+  #confetti{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+  .vic-inner{position:relative;text-align:center;padding:30px;z-index:2}
+  .vic-glitch{position:relative;font-family:'Orbitron',sans-serif;font-weight:900;
+    font-size:clamp(26px,6vw,58px);letter-spacing:.05em;color:#eafff6;
+    text-shadow:0 0 18px rgba(10,255,160,.8),0 0 40px rgba(10,255,160,.4);line-height:1.05}
+  .vic-glitch::before,.vic-glitch::after{content:attr(data-text);position:absolute;left:0;top:0;width:100%;overflow:hidden}
+  .vic-glitch::before{color:var(--cyan);animation:glitchA 2.2s infinite linear alternate-reverse;clip-path:inset(0 0 55% 0)}
+  .vic-glitch::after{color:var(--red);animation:glitchB 1.8s infinite linear alternate-reverse;clip-path:inset(55% 0 0 0)}
+  @keyframes glitchA{0%{transform:translate(0)}20%{transform:translate(-3px,1px)}40%{transform:translate(2px,-1px)}60%{transform:translate(-2px,0)}80%{transform:translate(1px,1px)}100%{transform:translate(0)}}
+  @keyframes glitchB{0%{transform:translate(0)}25%{transform:translate(2px,-1px)}50%{transform:translate(-2px,1px)}75%{transform:translate(1px,0)}100%{transform:translate(0)}}
+  .vic-sub{color:var(--cyan);letter-spacing:.24em;text-transform:uppercase;font-size:clamp(11px,2vw,14px);margin-top:20px;text-shadow:0 0 10px rgba(34,211,238,.6)}
+  .vic-stats{display:flex;gap:22px;justify-content:center;flex-wrap:wrap;margin-top:26px}
+  .vic-stats .vs{border:1px solid var(--term-dim);border-radius:10px;padding:14px 20px;background:rgba(10,255,160,.05);min-width:100px}
+  .vic-stats .vs .n{font-family:'Orbitron',sans-serif;font-size:24px;color:var(--amber);text-shadow:0 0 10px rgba(255,176,0,.5)}
+  .vic-stats .vs .l{font-size:10px;color:var(--term-dim);letter-spacing:.14em;text-transform:uppercase;margin-top:4px}
+  .vic-btn{margin-top:30px;font-family:'Orbitron',sans-serif;font-weight:700;font-size:14px;letter-spacing:.14em;
+    color:var(--bg);background:var(--term);border:none;padding:14px 34px;border-radius:6px;cursor:pointer;
+    box-shadow:0 0 24px rgba(10,255,160,.6);transition:transform .15s}
+  .vic-btn:hover{transform:scale(1.05)}
   body::before{
     content:"";position:fixed;inset:0;pointer-events:none;z-index:9998;
     background:repeating-linear-gradient(to bottom,rgba(0,0,0,0) 0,rgba(0,0,0,0) 2px,rgba(0,0,0,.18) 3px,rgba(0,0,0,.18) 3px);
@@ -467,6 +501,23 @@
 </head>
 <body>
 
+<!-- Matrix code-rain background -->
+<canvas id="matrix"></canvas>
+
+<!-- Sound toggle -->
+<button id="soundToggle" title="Toggle sound">🔊</button>
+
+<!-- 100% completion victory overlay -->
+<div id="victory">
+  <canvas id="confetti"></canvas>
+  <div class="vic-inner">
+    <div class="vic-glitch" data-text="SYSTEM FULLY UNLOCKED">SYSTEM FULLY UNLOCKED</div>
+    <div class="vic-sub">All 6 levels cleared · 100% complete</div>
+    <div class="vic-stats" id="vicStats"></div>
+    <button class="vic-btn" id="vicClose">▣ RETURN TO MENU</button>
+  </div>
+</div>
+
 <section id="boot" class="screen active">
   <div id="console"></div>
 
@@ -651,7 +702,11 @@ function finishBoot(){
   enterwrap.classList.add('show');
 }
 
-function enter(){ show('home'); renderLevels(); }
+function enter(){
+  if(!localStorage.getItem('umar_start_time')) localStorage.setItem('umar_start_time',String(Date.now()));
+  if(SOUND_ON) startAmbient();
+  show('home'); renderLevels();
+}
 
 /* ================= HOME / LEVEL MENU ================= */
 const LEVELS = [
@@ -723,10 +778,75 @@ function routeGame(lv){
 
 function markCleared(id){
   const p=loadProgress(); p[id]=true; saveProgress(p);
+  // count clears + track completion time
+  const t0 = parseInt(localStorage.getItem('umar_start_time')||'0',10);
+  if(Object.keys(loadProgress()).length>=LEVELS.length && !localStorage.getItem('umar_done_time')){
+    localStorage.setItem('umar_done_time', String(Date.now()));
+  }
 }
 
 /* dev helper: unlock/reset from console -> resetProgress() */
-window.resetProgress = ()=>{ localStorage.removeItem(SAVE_KEY); renderLevels(); };
+window.resetProgress = ()=>{
+  localStorage.removeItem(SAVE_KEY);
+  localStorage.removeItem('umar_done_time');
+  localStorage.removeItem('umar_victory_shown');
+  renderLevels();
+};
+
+/* ===== 100% Victory overlay ===== */
+function maybeVictory(){
+  const cleared = Object.keys(loadProgress()).length;
+  if(cleared>=LEVELS.length && !sessionStorage.getItem('umar_victory_shown')){
+    sessionStorage.setItem('umar_victory_shown','1');
+    setTimeout(showVictory, 450);
+    return true;
+  }
+  return false;
+}
+let confettiRAF=null;
+function showVictory(){
+  const stats=document.getElementById('vicStats');
+  let secs='—';
+  const done=parseInt(localStorage.getItem('umar_done_time')||'0',10);
+  const start=parseInt(localStorage.getItem('umar_start_time')||'0',10);
+  if(done && start && done>start){ secs=((done-start)/1000).toFixed(1)+'s'; }
+  stats.innerHTML=`
+    <div class="vs"><div class="n">6/6</div><div class="l">Levels</div></div>
+    <div class="vs"><div class="n">600</div><div class="l">XP</div></div>
+    <div class="vs"><div class="n">${secs}</div><div class="l">Total Time</div></div>`;
+  document.getElementById('victory').classList.add('show');
+  beep(660,0.1); setTimeout(()=>beep(880,0.1),130); setTimeout(()=>beep(1100,0.12),260); setTimeout(()=>beep(1320,0.16),400);
+  runConfetti();
+}
+function runConfetti(){
+  const cv=document.getElementById('confetti');
+  const ctx=cv.getContext('2d');
+  cv.width=window.innerWidth; cv.height=window.innerHeight;
+  const colors=['#0affa0','#22d3ee','#ffb000','#eafff6'];
+  const bits=[];
+  for(let i=0;i<140;i++){
+    bits.push({x:Math.random()*cv.width, y:Math.random()*-cv.height, w:5+Math.random()*6, h:8+Math.random()*8,
+      vy:2+Math.random()*3.5, vx:(Math.random()-0.5)*2, rot:Math.random()*6, vr:(Math.random()-0.5)*0.3,
+      c:colors[Math.floor(Math.random()*colors.length)]});
+  }
+  let frames=0;
+  function draw(){
+    ctx.clearRect(0,0,cv.width,cv.height);
+    bits.forEach(b=>{
+      b.y+=b.vy; b.x+=b.vx; b.rot+=b.vr;
+      if(b.y>cv.height+20){ b.y=-20; b.x=Math.random()*cv.width; }
+      ctx.save(); ctx.translate(b.x,b.y); ctx.rotate(b.rot);
+      ctx.fillStyle=b.c; ctx.fillRect(-b.w/2,-b.h/2,b.w,b.h);
+      ctx.restore();
+    });
+    frames++;
+    if(document.getElementById('victory').classList.contains('show')){
+      confettiRAF=requestAnimationFrame(draw);
+    }
+  }
+  cancelAnimationFrame(confettiRAF);
+  draw();
+}
 
 /* ================================================================
    GAME 01 — TERMINAL HACK (Profile unlock)
@@ -886,7 +1006,10 @@ function cleanupGame(){
 
 // tiny WebAudio blip (no assets needed)
 let audioCtx=null;
+let SOUND_ON = (localStorage.getItem('umar_sound')!=='off');
+let ambientNode=null, ambientGain=null;
 function beep(freq=800, dur=0.07){
+  if(!SOUND_ON) return;
   try{
     audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
     const o=audioCtx.createOscillator(), g=audioCtx.createGain();
@@ -896,6 +1019,36 @@ function beep(freq=800, dur=0.07){
     o.connect(g); g.connect(audioCtx.destination);
     o.start(); o.stop(audioCtx.currentTime+dur);
   }catch(e){}
+}
+// soft ambient synth hum
+function startAmbient(){
+  if(!SOUND_ON) return;
+  try{
+    audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+    if(ambientNode) return;
+    ambientNode=audioCtx.createOscillator();
+    const o2=audioCtx.createOscillator();
+    ambientGain=audioCtx.createGain();
+    ambientNode.type='sine'; ambientNode.frequency.value=55;
+    o2.type='sine'; o2.frequency.value=110.3;
+    ambientGain.gain.value=0.018;
+    ambientNode.connect(ambientGain); o2.connect(ambientGain);
+    ambientGain.connect(audioCtx.destination);
+    ambientNode.start(); o2.start();
+    ambientNode._o2=o2;
+  }catch(e){}
+}
+function stopAmbient(){
+  try{
+    if(ambientNode){ ambientNode.stop(); if(ambientNode._o2) ambientNode._o2.stop(); ambientNode=null; }
+  }catch(e){ ambientNode=null; }
+}
+function setSound(on){
+  SOUND_ON=on;
+  localStorage.setItem('umar_sound', on?'on':'off');
+  const btn=document.getElementById('soundToggle');
+  if(btn){ btn.textContent = on?'🔊':'🔇'; btn.classList.toggle('muted',!on); }
+  if(on){ startAmbient(); } else { stopAmbient(); }
 }
 
 /* ================================================================
@@ -1796,6 +1949,31 @@ function openSection(id){
     area.innerHTML=`<div class="sec-card"><div class="sec-body">This section unlocks as we build its game. ✓ cleared.</div></div>`;
   }
   show('section');
+  // glitch-decode the section's main H2 heading
+  const h2=area.querySelector('h2');
+  if(h2) glitchDecode(h2);
+  // if this was the final section, check for 100% victory
+  maybeVictory();
+}
+
+/* text scramble/decode effect — reveals real text from random chars */
+function glitchDecode(el, dur=700){
+  const final=el.textContent;
+  const chars='ABCDEFGHIJKLMNOPQRSTUVWXYZ#@%&$!*<>/0123456789';
+  const start=performance.now();
+  function frame(now){
+    const t=Math.min(1,(now-start)/dur);
+    const reveal=Math.floor(t*final.length);
+    let out='';
+    for(let i=0;i<final.length;i++){
+      if(i<reveal || final[i]===' '){ out+=final[i]; }
+      else { out+=chars[Math.floor(Math.random()*chars.length)]; }
+    }
+    el.textContent=out;
+    if(t<1) requestAnimationFrame(frame);
+    else el.textContent=final;
+  }
+  requestAnimationFrame(frame);
 }
 
 function typewriter(el, text, i=0){
@@ -1813,6 +1991,9 @@ document.getElementById('secBack').addEventListener('click', ()=>{ clearTimeout(
 document.getElementById('resetBtn').addEventListener('click', ()=>{
   if(confirm('Reset ALL level progress?\n\nEvery level will be locked again and you will replay each game.')){
     localStorage.removeItem(SAVE_KEY);
+    localStorage.removeItem('umar_done_time');
+    localStorage.removeItem('umar_start_time');
+    sessionStorage.removeItem('umar_victory_shown');
     renderLevels();
     beep(300,0.12);
   }
@@ -1828,6 +2009,55 @@ document.addEventListener('keydown', e=>{
     else enter();
   }
 });
+
+/* ===== Sound toggle ===== */
+(function initSound(){
+  const btn=document.getElementById('soundToggle');
+  btn.textContent = SOUND_ON?'🔊':'🔇';
+  btn.classList.toggle('muted',!SOUND_ON);
+  btn.addEventListener('click', ()=>{ setSound(!SOUND_ON); if(SOUND_ON) beep(700,0.05); });
+  // browsers need a user gesture to start audio; kick ambient on first interaction
+  const kick=()=>{ if(SOUND_ON) startAmbient(); document.removeEventListener('click',kick); document.removeEventListener('keydown',kick); };
+  document.addEventListener('click',kick); document.addEventListener('keydown',kick);
+})();
+
+/* ===== Victory overlay close ===== */
+document.getElementById('vicClose').addEventListener('click', ()=>{
+  document.getElementById('victory').classList.remove('show');
+  cancelAnimationFrame(confettiRAF);
+  show('home'); renderLevels();
+});
+
+/* ===== Matrix code-rain background ===== */
+(function matrixRain(){
+  const cv=document.getElementById('matrix');
+  const ctx=cv.getContext('2d');
+  let cols, drops, fontSize=14;
+  const glyphs='アカサタナabcdef0123456789<>/#@$%&*+=UMARKHAN'.split('');
+  function resize(){
+    cv.width=window.innerWidth; cv.height=window.innerHeight;
+    cols=Math.floor(cv.width/fontSize);
+    drops=new Array(cols).fill(0).map(()=>Math.random()*-50);
+  }
+  resize();
+  window.addEventListener('resize', resize);
+  function draw(){
+    ctx.fillStyle='rgba(4,7,10,0.08)';
+    ctx.fillRect(0,0,cv.width,cv.height);
+    ctx.font=fontSize+'px monospace';
+    for(let i=0;i<drops.length;i++){
+      const ch=glyphs[Math.floor(Math.random()*glyphs.length)];
+      const x=i*fontSize, y=drops[i]*fontSize;
+      // head brighter, tail dim
+      ctx.fillStyle= Math.random()<0.03 ? '#eafff6' : 'rgba(10,255,160,0.8)';
+      ctx.fillText(ch,x,y);
+      if(y>cv.height && Math.random()>0.975){ drops[i]=0; }
+      drops[i]+=0.5;
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
 
 runBoot();
 </script>

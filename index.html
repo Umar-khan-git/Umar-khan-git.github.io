@@ -609,13 +609,13 @@ function startTerminalHack(lv){
     WORD.split('').forEach((c,i)=>{
       if(state[i].locked) return;
       const disp=document.querySelector('#slot'+i+' .disp');
-      // The ACTIVE slot mixes in the correct letter often so it's winnable & feels fair
+      // The ACTIVE slot shows the correct letter often so it's easy to time a lock
       let ch;
-      if(i===activeIndex && Math.random()<0.28){ ch=WORD[i]; }
+      if(i===activeIndex && Math.random()<0.45){ ch=WORD[i]; }
       else { ch=CHARSET[Math.floor(Math.random()*CHARSET.length)]; }
       state[i].ch=ch; disp.textContent=ch;
     });
-  }, 90);
+  }, 200);
 
   function tryLock(){
     if(state[activeIndex].locked) { nextActive(); return; }

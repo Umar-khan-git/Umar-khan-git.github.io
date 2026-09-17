@@ -1450,7 +1450,7 @@ function startCertCollector(lv){
 
   const TARGET = REAL.length;
   const collectedSet = new Set();
-  let over=false;
+  let over=false, lives=3;
   // queue: ensure every real cert appears; mix with fakes
   const realQueue = REAL.slice().sort(()=>Math.random()-0.5);
 
@@ -1465,13 +1465,13 @@ function startCertCollector(lv){
         <div class="msg"><span class="warn">VERIFYING CREDENTIALS</span> — collect the authentic certifications.</div>
         <div class="ccTop">
           <div class="stat">collected: <b id="ccGot">0</b> / ${TARGET}</div>
-          <div class="stat" id="ccMissTxt" style="color:var(--term-dim)">real certs float in gold ✦</div>
+          <div class="stat lives" id="ccLives" style="color:var(--red);letter-spacing:.2em">❤ ❤ ❤</div>
         </div>
         <div class="ccField" id="ccField"></div>
         <div class="ccHint">
           &gt; Click the <b class="a">GOLD</b> certs (your real ones) to collect them. ✦<br/>
-          &gt; Ignore the <b class="r">RED</b> fakes — no penalty, just let them float past.<br/>
-          &gt; Collect all <b class="a">${TARGET}</b> to claim your credentials.
+          &gt; <b class="r">Don't click the RED fakes</b> — each wrong click costs a life. 💔<br/>
+          &gt; Collect all <b class="a">${TARGET}</b> before you lose <b class="r">3</b> lives. They also move fast — be quick.
         </div>
         <div class="granted" id="granted"><div class="big">🎓 CREDENTIALS VERIFIED</div></div>
       </div>
@@ -1484,12 +1484,10 @@ function startCertCollector(lv){
 
   function spawn(){
     if(over) return;
-    // every 2nd spawn is guaranteed a not-yet-collected real cert (keeps it winnable)
+    // more fakes than reals, and reals are NOT guaranteed each spawn -> harder to pick out
     let data, isReal;
     const needed = REAL.filter(r=>!collectedSet.has(r.label));
-    if(spawnCount % 2 === 0 && needed.length){
-      data = needed[Math.floor(Math.random()*needed.length)]; isReal=true;
-    } else if(Math.random() < 0.5 && needed.length){
+    if(needed.length && Math.random() < 0.4){
       data = needed[Math.floor(Math.random()*needed.length)]; isReal=true;
     } else {
       data = FAKE[Math.floor(Math.random()*FAKE.length)]; isReal=false;
@@ -1502,8 +1500,8 @@ function startCertCollector(lv){
     field.appendChild(el);
     const w=field.clientWidth, cw=210;
     const x=Math.random()*Math.max(10,(w-cw-10))+5;
-    const drift=(Math.random()-0.5)*0.4;
-    const p={ el, x, y:field.clientHeight+70, vy:0.5+Math.random()*0.35, drift, type:isReal?'real':'fake', label:data.label, done:false };
+    const drift=(Math.random()-0.5)*0.9;
+    const p={ el, x, y:field.clientHeight+70, vy:1.05+Math.random()*0.6, drift, type:isReal?'real':'fake', label:data.label, done:false };
     el.style.left=x+'px';
     el.addEventListener('click', ()=>onClick(p));
     certs.push(p);
@@ -1521,12 +1519,22 @@ function startCertCollector(lv){
       setTimeout(()=>p.el.remove(),250);
       if(collectedSet.size>=TARGET) win();
     } else {
-      // fake clicked: gentle shake, no penalty
-      beep(180,0.05);
-      p.el.style.transition='transform .15s';
-      p.el.style.transform='translateX(-4px) rotate(-4deg)';
-      setTimeout(()=>{ if(!p.done) p.el.style.transform=''; },150);
+      // fake clicked: lose a life
+      lives--; updateLives();
+      beep(150,0.1);
+      p.done=true;
+      p.el.style.transition='transform .2s,opacity .2s';
+      p.el.style.transform='scale(1.2) rotate(8deg)'; p.el.style.opacity='0';
+      const fw=document.getElementById('flashwin'); fw.style.background='var(--red)';
+      fw.classList.add('go'); setTimeout(()=>{fw.classList.remove('go');fw.style.background='';},400);
+      setTimeout(()=>p.el.remove(),200);
+      if(lives<=0) lose();
     }
+  }
+
+  function updateLives(){
+    const el=document.getElementById('ccLives');
+    if(el) el.textContent = ('❤ '.repeat(Math.max(0,lives))).trim() || '—';
   }
 
   function step(){
@@ -1555,8 +1563,19 @@ function startCertCollector(lv){
     setTimeout(()=>{ cleanupGame(); openSection('education'); }, 1400);
   }
 
+  function lose(){
+    over=true; stopLoops();
+    certs.forEach(p=>p.el.remove());
+    const g=document.getElementById('granted');
+    g.innerHTML='<div class="big" style="color:var(--red);text-shadow:0 0 20px rgba(255,77,94,.8)">✖ VERIFICATION FAILED — RETRY</div>';
+    g.classList.add('show');
+    beep(160,0.15);
+    setTimeout(()=>{ startCertCollector(lv); }, 1500);
+  }
+
+  updateLives();
   show('game');
-  ccSpawnTimer=setInterval(spawn, 1050);
+  ccSpawnTimer=setInterval(spawn, 780);
   spawn();
   ccRAF=requestAnimationFrame(step);
 }

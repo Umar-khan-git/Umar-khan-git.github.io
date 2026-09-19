@@ -36,19 +36,19 @@
   }
   #cursor{position:fixed;top:0;left:0;z-index:500;pointer-events:none;
     width:22px;height:22px;margin:-11px 0 0 -11px;
-    transition:transform .08s ease-out;display:none}
+    will-change:transform;display:none}
   #cursor::before,#cursor::after{content:"";position:absolute;background:var(--term);box-shadow:var(--glow)}
   #cursor::before{left:50%;top:0;width:1.5px;height:100%;transform:translateX(-50%)}
   #cursor::after{top:50%;left:0;height:1.5px;width:100%;transform:translateY(-50%)}
   #cursor .ring{position:absolute;inset:4px;border:1px solid var(--term);border-radius:2px;
-    box-shadow:0 0 6px rgba(10,255,160,.6);opacity:.85}
-  #cursor.click{transform:scale(.68)}
+    box-shadow:0 0 6px rgba(10,255,160,.6);opacity:.85;transition:border-color .12s,box-shadow .12s}
+  #cursor.click .ring{transform:scale(.68)}
   #cursor.hot .ring{border-color:var(--cyan);box-shadow:0 0 8px rgba(34,211,238,.8)}
   #cursor.hot::before,#cursor.hot::after{background:var(--cyan);box-shadow:0 0 8px rgba(34,211,238,.8)}
   #cursorDot{position:fixed;top:0;left:0;z-index:499;pointer-events:none;
     width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:50%;
-    background:var(--cyan);box-shadow:0 0 10px var(--cyan);opacity:.6;
-    transition:transform .12s ease-out;display:none}
+    background:var(--cyan);box-shadow:0 0 10px var(--cyan);opacity:.55;
+    will-change:transform;display:none}
 
   /* Sound toggle button */
   #soundToggle{position:fixed;top:16px;right:18px;z-index:120;width:40px;height:40px;
@@ -2061,31 +2061,39 @@ document.getElementById('vicClose').addEventListener('click', ()=>{
   cur.style.display='block'; dot.style.display='block';
   let x=window.innerWidth/2, y=window.innerHeight/2;
   let dx=x, dy=y;
+  let lastTarget=null, hotCheckAt=0;
+
+  // cheap listener: just record coords, do NOT touch DOM here
   document.addEventListener('mousemove', e=>{
-    x=e.clientX; y=e.clientY;
-    cur.style.transform=`translate(${x}px,${y}px)`;
-    // hot state over clickable elements
-    const el=e.target;
-    const clickable = el.closest('button, a, .level, .node, .mgCard, .pad, .copy, input, [role="button"], .packet, .cert, #soundToggle');
-    cur.classList.toggle('hot', !!clickable);
-  });
+    x=e.clientX; y=e.clientY; lastTarget=e.target;
+  }, {passive:true});
   document.addEventListener('mousedown', ()=>cur.classList.add('click'));
   document.addEventListener('mouseup', ()=>cur.classList.remove('click'));
   document.addEventListener('mouseleave', ()=>{ cur.style.opacity='0'; dot.style.opacity='0'; });
-  document.addEventListener('mouseenter', ()=>{ cur.style.opacity='1'; dot.style.opacity='.6'; });
-  // trailing dot with easing
-  (function trail(){
-    dx += (x-dx)*0.18; dy += (y-dy)*0.18;
+  document.addEventListener('mouseenter', ()=>{ cur.style.opacity='1'; dot.style.opacity='.55'; });
+
+  const HOT_SEL='button, a, .level, .node, .mgCard, .pad, .copy, input, [role="button"], .packet, .cert, #soundToggle';
+  function loop(now){
+    // main cursor snaps to pointer (no lag)
+    cur.style.transform=`translate(${x}px,${y}px)`;
+    // trailing dot eases behind
+    dx += (x-dx)*0.2; dy += (y-dy)*0.2;
     dot.style.transform=`translate(${dx}px,${dy}px)`;
-    requestAnimationFrame(trail);
-  })();
+    // hot-state check throttled to ~10x/sec (closest() is the costly bit)
+    if(now-hotCheckAt>90 && lastTarget){
+      hotCheckAt=now;
+      cur.classList.toggle('hot', !!(lastTarget.closest && lastTarget.closest(HOT_SEL)));
+    }
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
 })();
 
 /* ===== Matrix code-rain background ===== */
 (function matrixRain(){
   const cv=document.getElementById('matrix');
   const ctx=cv.getContext('2d');
-  let cols, drops, fontSize=14;
+  let cols, drops, fontSize=16, lastDraw=0;
   const glyphs='アカサタナabcdef0123456789<>/#@$%&*+=UMARKHAN'.split('');
   function resize(){
     cv.width=window.innerWidth; cv.height=window.innerHeight;
@@ -2094,22 +2102,24 @@ document.getElementById('vicClose').addEventListener('click', ()=>{
   }
   resize();
   window.addEventListener('resize', resize);
-  function draw(){
-    ctx.fillStyle='rgba(4,7,10,0.08)';
+  function draw(now){
+    requestAnimationFrame(draw);
+    // cap matrix to ~24fps so it barely costs anything
+    if(now-lastDraw<42) return;
+    lastDraw=now;
+    ctx.fillStyle='rgba(4,7,10,0.10)';
     ctx.fillRect(0,0,cv.width,cv.height);
     ctx.font=fontSize+'px monospace';
     for(let i=0;i<drops.length;i++){
-      const ch=glyphs[Math.floor(Math.random()*glyphs.length)];
-      const x=i*fontSize, y=drops[i]*fontSize;
-      // head brighter, tail dim
+      const ch=glyphs[(Math.random()*glyphs.length)|0];
+      const yy=drops[i]*fontSize;
       ctx.fillStyle= Math.random()<0.03 ? '#eafff6' : 'rgba(10,255,160,0.8)';
-      ctx.fillText(ch,x,y);
-      if(y>cv.height && Math.random()>0.975){ drops[i]=0; }
-      drops[i]+=0.5;
+      ctx.fillText(ch,i*fontSize,yy);
+      if(yy>cv.height && Math.random()>0.975){ drops[i]=0; }
+      drops[i]++;
     }
-    requestAnimationFrame(draw);
   }
-  draw();
+  requestAnimationFrame(draw);
 })();
 
 runBoot();

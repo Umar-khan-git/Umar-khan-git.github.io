@@ -215,10 +215,20 @@
   .sb-stat .v{font-family:'Orbitron',sans-serif;font-size:19px;color:var(--amber);text-shadow:0 0 8px rgba(255,176,0,.5)}
   .sb-stat .k{font-size:9px;letter-spacing:.1em;color:var(--term-dim);text-transform:uppercase;margin-top:3px}
 
-  .sb-links{display:flex;flex-direction:column;gap:8px;width:100%;margin-top:20px}
+  .sb-links{position:relative;display:flex;flex-direction:column;gap:8px;width:100%;margin-top:20px}
   .sb-links a{display:block;border:1px solid var(--term-dim);border-radius:8px;padding:10px;
     color:var(--fg);text-decoration:none;font-size:12.5px;letter-spacing:.04em;transition:.18s;background:rgba(10,255,160,.03)}
   .sb-links a:hover{border-color:var(--term);color:var(--term);box-shadow:var(--glow);transform:translateX(3px)}
+  /* locked state: blur the links + disable clicks + overlay */
+  .sb-links.locked a{filter:blur(4px);pointer-events:none;opacity:.5;user-select:none}
+  .sb-lock{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+    border:1px dashed rgba(255,176,0,.5);border-radius:10px;background:rgba(6,10,14,.72);backdrop-filter:blur(1px);text-align:center;padding:10px}
+  .sb-links.locked .sb-lock{display:flex}
+  .sb-lock-ico{font-size:22px;filter:drop-shadow(0 0 6px rgba(255,176,0,.6))}
+  .sb-lock-txt{color:var(--amber);font-size:11px;letter-spacing:.06em;line-height:1.4;max-width:180px}
+  .sb-lock-prog{font-family:'Orbitron',sans-serif;font-size:12px;color:var(--term);letter-spacing:.1em;text-shadow:var(--glow)}
+  .sb-links.unlocked a{animation:unlockPop .5s ease}
+  @keyframes unlockPop{0%{transform:scale(.9);box-shadow:0 0 0 rgba(10,255,160,0)}50%{box-shadow:0 0 18px rgba(10,255,160,.6)}100%{transform:scale(1)}}
   .reset-btn{margin-top:18px;width:100%;background:none;border:1px solid rgba(255,77,94,.4);color:var(--red);
     font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.12em;
     padding:9px;border-radius:8px;cursor:pointer;transition:.2s}
@@ -630,11 +640,16 @@
         <div class="sb-stat"><div class="v" id="stXP">0</div><div class="k">XP</div></div>
       </div>
 
-      <!-- quick links -->
-      <div class="sb-links">
-        <a href="https://github.com/Umar-khan-git" target="_blank" rel="noopener" title="GitHub">🐙 GitHub</a>
-        <a href="https://linkedin.com/in/mohd-umar-khan-944537263" target="_blank" rel="noopener" title="LinkedIn">💼 LinkedIn</a>
-        <a href="mailto:mohdumarkhan.work@gmail.com" title="Email">📧 Email</a>
+      <!-- quick links (locked until all missions cleared) -->
+      <div class="sb-links locked" id="sbLinks">
+        <a href="https://github.com/Umar-khan-git" target="_blank" rel="noopener" title="GitHub" data-lock="1">🐙 GitHub</a>
+        <a href="https://linkedin.com/in/mohd-umar-khan-944537263" target="_blank" rel="noopener" title="LinkedIn" data-lock="1">💼 LinkedIn</a>
+        <a href="mailto:mohdumarkhan.work@gmail.com" title="Email" data-lock="1">📧 Email</a>
+        <div class="sb-lock" id="sbLock">
+          <span class="sb-lock-ico">🔒</span>
+          <span class="sb-lock-txt">Clear all 6 missions to unlock contact</span>
+          <span class="sb-lock-prog" id="sbLockProg">0 / 6</span>
+        </div>
       </div>
       <button class="reset-btn" id="resetBtn">⟲ RESET PROGRESS</button>
     </aside>
@@ -850,6 +865,18 @@ function renderLevels(){
   document.getElementById('libCount').textContent = cleared+'/'+LEVELS.length;
   document.getElementById('ringPct').textContent = pct+'%';
   document.getElementById('sbRankTxt').textContent = RANKS[cleared] || RANKS[RANKS.length-1];
+  // contact links lock/unlock
+  const links=document.getElementById('sbLinks');
+  const allDone = cleared>=LEVELS.length;
+  document.getElementById('sbLockProg').textContent = cleared+' / '+LEVELS.length;
+  if(allDone){
+    if(links.classList.contains('locked')){
+      links.classList.remove('locked'); links.classList.add('unlocked');
+      beep(880,0.08); setTimeout(()=>beep(1100,0.1),120);
+    }
+  } else {
+    links.classList.add('locked'); links.classList.remove('unlocked');
+  }
   // ring: circumference 2*pi*52 = 326.7
   const circ=327;
   setTimeout(()=>{ document.getElementById('ringFg').style.strokeDashoffset = String(circ - circ*pct/100); }, 80);

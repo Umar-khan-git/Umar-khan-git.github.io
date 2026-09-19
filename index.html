@@ -30,6 +30,26 @@
   #matrix{position:fixed;inset:0;z-index:0;opacity:.08;pointer-events:none}
   .screen{background:transparent;z-index:2}
 
+  /* ===== Custom coding-theme cursor ===== */
+  @media (hover:hover) and (pointer:fine){
+    *{cursor:none !important}
+  }
+  #cursor{position:fixed;top:0;left:0;z-index:500;pointer-events:none;
+    width:22px;height:22px;margin:-11px 0 0 -11px;
+    transition:transform .08s ease-out;display:none}
+  #cursor::before,#cursor::after{content:"";position:absolute;background:var(--term);box-shadow:var(--glow)}
+  #cursor::before{left:50%;top:0;width:1.5px;height:100%;transform:translateX(-50%)}
+  #cursor::after{top:50%;left:0;height:1.5px;width:100%;transform:translateY(-50%)}
+  #cursor .ring{position:absolute;inset:4px;border:1px solid var(--term);border-radius:2px;
+    box-shadow:0 0 6px rgba(10,255,160,.6);opacity:.85}
+  #cursor.click{transform:scale(.68)}
+  #cursor.hot .ring{border-color:var(--cyan);box-shadow:0 0 8px rgba(34,211,238,.8)}
+  #cursor.hot::before,#cursor.hot::after{background:var(--cyan);box-shadow:0 0 8px rgba(34,211,238,.8)}
+  #cursorDot{position:fixed;top:0;left:0;z-index:499;pointer-events:none;
+    width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:50%;
+    background:var(--cyan);box-shadow:0 0 10px var(--cyan);opacity:.6;
+    transition:transform .12s ease-out;display:none}
+
   /* Sound toggle button */
   #soundToggle{position:fixed;top:16px;right:18px;z-index:120;width:40px;height:40px;
     border:1px solid var(--term-dim);background:rgba(4,7,10,.7);border-radius:8px;cursor:pointer;
@@ -503,6 +523,10 @@
 
 <!-- Matrix code-rain background -->
 <canvas id="matrix"></canvas>
+
+<!-- Custom coding-theme cursor -->
+<div id="cursorDot"></div>
+<div id="cursor"><div class="ring"></div></div>
 
 <!-- Sound toggle -->
 <button id="soundToggle" title="Toggle sound">🔊</button>
@@ -2027,6 +2051,35 @@ document.getElementById('vicClose').addEventListener('click', ()=>{
   cancelAnimationFrame(confettiRAF);
   show('home'); renderLevels();
 });
+
+/* ===== Custom coding-theme cursor ===== */
+(function customCursor(){
+  // only enable on real pointer devices (skip touch)
+  if(!window.matchMedia || !window.matchMedia('(hover:hover) and (pointer:fine)').matches) return;
+  const cur=document.getElementById('cursor');
+  const dot=document.getElementById('cursorDot');
+  cur.style.display='block'; dot.style.display='block';
+  let x=window.innerWidth/2, y=window.innerHeight/2;
+  let dx=x, dy=y;
+  document.addEventListener('mousemove', e=>{
+    x=e.clientX; y=e.clientY;
+    cur.style.transform=`translate(${x}px,${y}px)`;
+    // hot state over clickable elements
+    const el=e.target;
+    const clickable = el.closest('button, a, .level, .node, .mgCard, .pad, .copy, input, [role="button"], .packet, .cert, #soundToggle');
+    cur.classList.toggle('hot', !!clickable);
+  });
+  document.addEventListener('mousedown', ()=>cur.classList.add('click'));
+  document.addEventListener('mouseup', ()=>cur.classList.remove('click'));
+  document.addEventListener('mouseleave', ()=>{ cur.style.opacity='0'; dot.style.opacity='0'; });
+  document.addEventListener('mouseenter', ()=>{ cur.style.opacity='1'; dot.style.opacity='.6'; });
+  // trailing dot with easing
+  (function trail(){
+    dx += (x-dx)*0.18; dy += (y-dy)*0.18;
+    dot.style.transform=`translate(${dx}px,${dy}px)`;
+    requestAnimationFrame(trail);
+  })();
+})();
 
 /* ===== Matrix code-rain background ===== */
 (function matrixRain(){
